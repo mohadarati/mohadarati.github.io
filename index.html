@@ -1,228 +1,151 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="المحاضرات">
-<title>المحاضرات</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap">
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محاضرات مقياس البرمجيات الحرة ومفتوحة المصدر</title>
 <style>
-:root{--bg:#F7F7F5;--card:#fff;--ink:#1B1F2A;--mute:#5A606B;--line:#E4E4DF;--acc:#0F6B63;--soft:#E3F0EE;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101413;--card:#1A2020;--ink:#ECEFEE;--mute:#A3ACAA;--line:#2A3331;--acc:#4FB8AC;--soft:#1D3532;--on:#0B1412}}
-:root[data-theme="dark"]{--bg:#101413;--card:#1A2020;--ink:#ECEFEE;--mute:#A3ACAA;--line:#2A3331;--acc:#4FB8AC;--soft:#1D3532;--on:#0B1412}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,sans-serif;-webkit-text-size-adjust:100%}
-#app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
-header{padding:20px 20px 12px}
-h1{margin:0;font-size:30px}
-.sub{margin:6px 0 0;font-size:14px;color:var(--mute)}
-.search{display:block;margin-top:14px}
-.search input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
-#add{margin-top:10px;width:100%}
-main{flex:1;overflow-y:auto;padding:0 20px}
-ul{list-style:none;margin:0;padding:0}
-li{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
-.main{flex:1;display:flex;align-items:center;gap:12px;padding:14px 0;border:0;background:none;color:inherit;font:inherit;text-align:start;min-width:0}
-.main:disabled{cursor:default}
-.num{width:44px;height:44px;flex:none;border-radius:12px;background:var(--soft);color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
-.t{font-size:16px;font-weight:700}
-.m{font-size:13px;color:var(--mute);margin-top:2px}
-.ic{width:44px;height:44px;flex:none;border-radius:22px;border:1.5px solid var(--acc);background:var(--card);color:var(--acc);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-.ic.ok{background:var(--acc);color:var(--on);cursor:default}
-.ic.plain{border-color:var(--line);color:var(--mute)}
-.ring{transform:rotate(-90deg)}
-.empty{padding:60px 0;text-align:center;color:var(--mute);font-size:16px}
-nav{display:flex;border-top:1px solid var(--line);background:var(--card)}
-nav button{flex:1;min-height:56px;border:0;background:none;font:inherit;font-size:14px;font-weight:700;color:var(--mute);cursor:pointer}
-nav button[aria-current="page"]{color:var(--acc)}
-.btn{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--acc);background:var(--card);color:var(--acc);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
-.btn.solid{background:var(--acc);color:var(--on)}
-#rd{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:6;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-#rd[hidden]{display:none}
-.rh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card)}
-.rh .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#pg{flex:1;overflow:auto;padding:12px;text-align:center}
-#pg canvas{display:block;margin:0 auto 12px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.25);max-width:100%}
-#pm{padding:40px 0;color:var(--mute)}
-#toast{position:fixed;inset-inline:20px;bottom:90px;margin:0 auto;max-width:360px;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:14px;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
-#toast.on{opacity:1}
-#ed{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:7}#ed[hidden]{display:none}.sheet{width:100%;max-width:560px;background:var(--bg);border-radius:24px 24px 0 0;padding:24px 24px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}.sheet h2{margin:0 0 4px;font-size:22px}.sheet label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--mute)}.sheet input[type="text"],.sheet input:not([type]){height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 14px;font:inherit;font-size:16px}.row2{display:flex;gap:10px}.row2 .btn{flex:1}
-:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+:root {
+  --site-primary: #145B52;
+  --site-on-primary: #FFFFFF;
+  --site-secondary: #E8B86D;
+  --site-on-secondary: #26352F;
+  --site-background: #F5F7F3;
+  --site-on-background: #1D2D29;
+  --site-font-body: Tahoma, Arial, sans-serif;
+  --site-font-heading: Tahoma, Arial, sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
+.app { min-height: 100vh; background-color: var(--site-background); color: var(--site-on-background); border-radius: 0; }
+.topbar { background: var(--site-primary); color: var(--site-on-primary); padding: calc(17px * var(--site-spacing-scale)) max(5vw, 22px); display:flex; align-items:center; justify-content:space-between; gap:18px; }
+.brand { display:flex; align-items:center; gap:12px; font-weight:800; font-size:22px; }
+.logo { width:43px; height:43px; border-radius:14px; display:grid; place-items:center; background:var(--site-secondary); color:#26352F; font-size:23px; }
+.nav { display:flex; gap:22px; align-items:center; font-size:14px; }
+.nav a { color:inherit; text-decoration:none; opacity:.9; }
+.admin-btn, .primary-btn { border:0; border-radius:12px; padding:11px 17px; font:inherit; font-weight:700; cursor:pointer; }
+.admin-btn { background:rgba(255,255,255,.14); color:white; border:1px solid rgba(255,255,255,.28); }
+.hero { background:var(--site-primary); color:white; padding:58px max(5vw,22px) 75px; position:relative; overflow:hidden; }
+.hero:after { content:""; position:absolute; width:330px; height:330px; border:1px solid rgba(255,255,255,.12); border-radius:50%; left:8%; top:-190px; box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 75px rgba(255,255,255,.025); pointer-events:none; opacity:var(--site-decoration-opacity); }
+.hero-inner { max-width:1100px; margin:auto; position:relative; z-index:1; }
+.eyebrow { color:var(--site-secondary); font-size:14px; font-weight:700; margin-bottom:15px; }
+h1 { font-family:var(--site-font-heading); font-size:calc(42px * var(--site-heading-scale)); line-height:1.35; margin:0 0 13px; max-width:650px; }
+.hero p { color:rgba(255,255,255,.82); line-height:1.9; max-width:600px; margin:0 0 25px; }
+.primary-btn { background:var(--site-secondary); color:var(--site-on-secondary); }
+.stats { display:flex; gap:34px; margin-top:35px; }
+.stat strong { display:block; font-size:23px; }
+.stat span { font-size:12px; color:rgba(255,255,255,.72); }
+main { max-width:1100px; margin:-25px auto 0; padding:0 22px 60px; position:relative; z-index:2; }
+.panel { background:light-dark(#FFFFFF,#202925); border:1px solid light-dark(#E5EAE4,#35423C); border-radius:calc(20px * var(--site-radius-scale)); padding:23px; box-shadow:0 8px 28px rgba(24,50,40,.07); }
+.section-head { display:flex; align-items:end; justify-content:space-between; gap:15px; margin:26px 0 17px; }
+.section-head h2 { font-size:calc(23px * var(--site-heading-scale)); margin:0 0 5px; }
+.muted { color:light-dark(#718079,#AAB8B0); font-size:13px; }
+.search-row { display:flex; gap:10px; flex-wrap:wrap; }
+.search-row input, .search-row select, .admin-form input, .admin-form select, .admin-form textarea { min-width:0; border:1px solid light-dark(#DCE4DD,#45534B); background:light-dark(#FBFCFA,#18211D); color:var(--site-on-background); padding:13px 14px; border-radius:11px; font:inherit; outline:none; }
+.search-row input { flex:1; }
+.search-row select { min-width:180px; }
+.filters { display:flex; gap:8px; flex-wrap:wrap; margin-top:15px; }
+.chip { border:1px solid light-dark(#DCE4DD,#45534B); border-radius:30px; padding:8px 14px; background:transparent; color:var(--site-on-background); font:inherit; font-size:13px; cursor:pointer; }
+.chip.active { background:var(--site-primary); color:white; border-color:var(--site-primary); }
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.lecture { background:light-dark(#FFFFFF,#202925); border:1px solid light-dark(#E5EAE4,#35423C); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+.lecture-top { height:110px; padding:18px; display:flex; justify-content:space-between; align-items:start; background:linear-gradient(135deg,#145B52,#26786B); color:white; }
+.lecture-icon { font-size:34px; }
+.tag { font-size:11px; padding:6px 10px; border-radius:30px; background:rgba(255,255,255,.16); }
+.lecture-body { padding:17px; display:flex; flex-direction:column; flex:1; }
+.lecture-body h3 { margin:0 0 8px; font-size:17px; }
+.lecture-body p { margin:0 0 15px; font-size:13px; line-height:1.8; color:light-dark(#718079,#AAB8B0); flex:1; }
+.lecture-meta { display:flex; justify-content:space-between; color:light-dark(#7B8981,#AAB8B0); font-size:11px; padding-top:12px; border-top:1px solid light-dark(#EDF0EC,#35423C); }
+.lecture-actions { display:flex; gap:8px; margin-top:14px; }
+.lecture-actions button { flex:1; border:0; border-radius:9px; padding:10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; background:var(--site-primary); color:white; }
+.lecture-actions button.secondary { background:light-dark(#EDF3EF,#35423C); color:var(--site-on-background); }
+.empty { grid-column:1/-1; text-align:center; padding:38px; color:light-dark(#718079,#AAB8B0); }
+footer { background:light-dark(#EAF0EA,#18211D); text-align:center; padding:25px; color:light-dark(#64746B,#AAB8B0); font-size:12px; }
+.modal-backdrop { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; }
+.modal-backdrop.show { display:flex; }
+.modal { width:min(520px,100%); max-height:90vh; overflow:auto; background:light-dark(#FFFFFF,#202925); color:var(--site-on-background); border-radius:18px; padding:24px; }
+.modal h2 { margin:0 0 18px; }
+.modal-head { display:flex; justify-content:space-between; align-items:center; }
+.close { border:0; background:transparent; color:inherit; font-size:24px; cursor:pointer; }
+.admin-form { display:grid; gap:12px; }
+.admin-form label { font-size:13px; font-weight:700; display:grid; gap:7px; }
+.admin-form textarea { min-height:85px; resize:vertical; }
+.admin-form button { background:var(--site-primary); color:white; border:0; padding:13px; border-radius:10px; font:inherit; font-weight:700; cursor:pointer; }
+.admin-note { font-size:12px; line-height:1.7; color:light-dark(#718079,#AAB8B0); }
+.admin-list { display:grid; gap:9px; margin:16px 0; }
+.admin-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px; border:1px solid light-dark(#DCE4DD,#45534B); border-radius:11px; }
+.admin-item strong { display:block; font-size:13px; }
+.admin-item small { color:light-dark(#718079,#AAB8B0); font-size:11px; }
+.admin-item-actions { display:flex; gap:6px; flex-shrink:0; }
+.admin-item-actions button { border:0; border-radius:8px; padding:8px 10px; font:inherit; font-size:11px; cursor:pointer; background:light-dark(#EDF3EF,#35423C); color:var(--site-on-background); }
+.admin-item-actions button.danger { background:#FCE8E6; color:#A3261D; }
+.toast { position:fixed; bottom:20px; left:20px; background:#1D2D29; color:white; padding:12px 17px; border-radius:10px; display:none; z-index:40; }
+@media(max-width:800px){ .grid{grid-template-columns:repeat(2,1fr)} .nav{display:none} h1{font-size:34px} }
+@media(max-width:540px){ .grid{grid-template-columns:1fr} .hero{padding-top:42px} .stats{gap:20px} .search-row>*{width:100%} .section-head{align-items:start; flex-direction:column} }
+@media(prefers-color-scheme:dark){ .hero:after{border-color:rgba(255,255,255,.1)} }
 </style>
 </head>
 <body>
-<div id="app">
-<header>
-<h1 id="h">المحاضرات</h1>
-<p class="sub" id="sub"></p>
-<label class="search" id="sw"><span style="position:absolute;left:-9999px">بحث</span><input id="q" type="search" placeholder="ابحث عن محاضرة" autocomplete="off"></label>
-<button class="btn" id="add">إضافة محاضرة PDF من جهازك</button>
-<input id="file" type="file" accept="application/pdf,.pdf" hidden>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="logo">م</div><span>محاضراتي</span></div>
+  <nav class="nav"><a href="#home">الرئيسية</a><a href="#lectures">المحاضرات</a><a href="#about">عن المنصة</a></nav>
+  <button class="admin-btn" onclick="openAdmin()">دخول الأستاذ　↗</button>
 </header>
-<main><ul id="list"></ul><div class="empty" id="empty" hidden></div></main>
-<nav><button id="t1" aria-current="page">المحاضرات</button><button id="t2">التنزيلات</button></nav>
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="eyebrow">فضاء المقياس الدراسي</div>
+    <h1>محاضرات في مقياس<br>البرمجيات الحرة والبرمجيات مفتوحة المصدر</h1>
+    <p>مرحباً بكم في فضاء مقياس البرمجيات الحرة والبرمجيات مفتوحة المصدر. تجدون هنا جميع محاضرات المقياس مرتبة في مكان واحد، مع إمكانية الاطلاع عليها وتحميلها.</p>
+    <button class="primary-btn" onclick="document.getElementById('lectures').scrollIntoView({behavior:'smooth'})">استكشف المحاضرات　←</button>
+    <div class="stats"><div class="stat"><strong id="stat-count">06</strong><span>محاضرات متاحة</span></div><div class="stat"><strong>24/7</strong><span>اطلاع في أي وقت</span></div><div class="stat"><strong>PDF</strong><span>ملفات قابلة للتحميل</span></div></div>
+  </div>
+</section>
+<main>
+  <section class="panel" id="lectures">
+    <div class="section-head" style="margin-top:0"><div><h2>محاضرات المقياس</h2><div class="muted">جميع المحاضرات تخص مقياس البرمجيات الحرة والبرمجيات مفتوحة المصدر</div></div><span class="muted" id="result-count">6 محاضرات</span></div>
+    <div class="search-row"><input id="search" type="search" placeholder="ابحث عن محاضرة أو كلمة مفتاحية…" oninput="renderLectures()"></div>
+    <div class="filters"><span class="chip active">مرتبة رقمياً من الأولى إلى الأخيرة</span></div>
+  </section>
+  <div class="section-head"><div><h2>أحدث المحاضرات</h2><div class="muted">محتوى دراسي منظم لمساعدتك على المراجعة</div></div></div>
+  <section class="grid" id="lecture-grid"></section>
+</main>
+<footer id="about">© 2026 محاضراتي — فضاؤكم للتعلم والمعرفة</footer>
 </div>
-
-<div id="rd" hidden role="dialog" aria-modal="true" aria-labelledby="rt">
-<div class="rh"><button class="btn" id="rc">إغلاق</button><div class="t" id="rt"></div><button class="btn solid" id="rs" hidden>حفظ في الملفات</button></div>
-<div id="pg"></div>
-</div>
-<div id="ed" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="et"><h2 id="et">تعديل المحاضرة</h2><label>العنوان<input id="e1" autocomplete="off"></label><label>اسم المحاضِر<input id="e2" autocomplete="off"></label><button class="btn" id="e3">استبدال ملف PDF</button><input id="file2" type="file" accept="application/pdf,.pdf" hidden><div class="row2"><button class="btn" id="e4">حذف المحاضرة</button><button class="btn solid" id="e5">حفظ</button></div><button class="btn" id="e6">إلغاء</button></div></div>
-<div id="toast" role="status" aria-live="polite"></div>
-
+<div class="modal-backdrop" id="admin-modal" onclick="if(event.target===this)closeAdmin()"><div class="modal"><div class="modal-head"><h2 id="modal-title">دخول الأستاذ</h2><button class="close" onclick="closeAdmin()">×</button></div><div id="login-view"><form class="admin-form" onsubmit="login(event)"><label>كلمة المرور<input id="admin-password" type="password" placeholder="أدخل كلمة المرور" required></label><button type="submit">دخول إلى لوحة الإدارة</button><div class="admin-note">هذه نسخة تجريبية للمعاينة. قبل النشر الفعلي يجب إعداد تسجيل دخول آمن وخادم لحفظ الملفات ومشاركتها مع الطلاب.</div></form></div><div id="manage-view" style="display:none"><form class="admin-form" id="lecture-form" onsubmit="addLecture(event)"><label>عنوان المحاضرة<input id="lecture-title" required placeholder="مثال: مقدمة في البرمجيات الحرة"></label><label>المقياس<input value="البرمجيات الحرة والبرمجيات مفتوحة المصدر" disabled></label><label>وصف مختصر<textarea id="lecture-desc" placeholder="اكتب نبذة عن المحاضرة"></textarea></label><label>ملف المحاضرة (PDF) — اختياري عند التعديل<input id="lecture-file" type="file" accept=".pdf,application/pdf"></label><button id="lecture-submit" type="submit">إضافة المحاضرة</button><button id="cancel-edit" type="button" class="chip" style="display:none" onclick="cancelEdit()">إلغاء التعديل</button></form><h3>المحاضرات الحالية</h3><div class="admin-list" id="admin-lecture-list"></div><p class="admin-note">الملفات المضافة في هذه المعاينة تبقى داخل جلسة المتصفح الحالية فقط، ولا تُنشر للطلاب على الإنترنت.</p><button class="chip" onclick="logout()">تسجيل الخروج</button></div></div></div>
+<div class="toast" id="toast"></div>
 <script>
-var DEMO=[
-{id:1,t:'المحاضرة الأولى: مقدمة',s:'اسم المحاضِر',d:'اسم المحاضِر · 3 صفحات',src:'demo'},
-{id:2,t:'المحاضرة الثانية',s:'اسم المحاضِر',d:'اسم المحاضِر · 3 صفحات',src:'demo'},
-{id:3,t:'المحاضرة الثالثة',s:'اسم المحاضِر',d:'اسم المحاضِر · 3 صفحات',src:'demo'},
-{id:4,t:'المحاضرة الرابعة',s:'اسم المحاضِر',d:'اسم المحاضِر · 3 صفحات',src:'demo'}
+const starter = [
+ {id:1,title:'مفهوم البرمجيات الحرة',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'مدخل إلى مفهوم البرمجيات الحرة ومبادئها الأساسية.',date:'2026-10-28',icon:'🆓',kind:'PDF'},
+ {id:2,title:'البرمجيات مفتوحة المصدر',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'التعرف على مفهوم المصدر المفتوح وخصائصه ومجتمعاته.',date:'2026-10-25',icon:'💻',kind:'PDF'},
+ {id:3,title:'تراخيص البرمجيات الحرة',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'عرض لأهم التراخيص وشروط الاستخدام والتوزيع.',date:'2026-10-21',icon:'📜',kind:'PDF'},
+ {id:4,title:'نظام GNU و Linux',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'التعريف بمشروع GNU ونظام Linux وتطورهما.',date:'2026-10-18',icon:'🐧',kind:'PDF'},
+ {id:5,title:'ثقافة التعاون والتطوير المفتوح',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'كيف يساهم التعاون المجتمعي في تطوير البرمجيات الحرة.',date:'2026-10-14',icon:'🤝',kind:'PDF'},
+ {id:6,title:'مقارنة البرمجيات الحرة والاحتكارية',subject:'البرمجيات الحرة ومفتوحة المصدر',desc:'مقارنة الخصائص والمزايا والتحديات بين النموذجين.',date:'2026-10-10',icon:'⚖️',kind:'PDF'}
 ];
-var $=function(i){return document.getElementById(i)};
-var L=[],db=null,mem={},got=new Set(),active={},tab=1,cur=null,dls=null;
-var ICON_DL='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>';
-var ICON_OK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
-var ICON_TR='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-var ICON_ED='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
-var C=2*Math.PI*11;
-if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js'}
-
-/* التخزين على الجهاز */
-function openDB(){return new Promise(function(r){try{var q=indexedDB.open('lectures-pdf',1);q.onupgradeneeded=function(){q.result.createObjectStore('f')};q.onsuccess=function(){r(q.result)};q.onerror=function(){r(null)}}catch(e){r(null)}})}
-function tx(mode,fn){return new Promise(function(res,rej){var t=db.transaction('f',mode),q=fn(t.objectStore('f'));t.oncomplete=function(){res(q.result)};t.onerror=t.onabort=function(){rej(t.error)}})}
-function put(k,b){mem[k]=b;if(!db)return Promise.resolve();return Promise.race([tx('readwrite',function(s){return s.put(b,k)}),sleep(4000)])}
-function get(k){if(mem[k])return Promise.resolve(mem[k]);if(!db)return Promise.resolve(undefined);return Promise.race([tx('readonly',function(s){return s.get(k)}),sleep(4000)])}
-function del(k){delete mem[k];if(!db)return Promise.resolve();return Promise.race([tx('readwrite',function(s){return s.delete(k)}),sleep(4000)])}
-function keys(){if(!db)return Promise.resolve(Object.keys(mem).map(Number));return tx('readonly',function(s){return s.getAllKeys()})}
-function loadMeta(){try{var s=localStorage.getItem('lecturesV2');if(s)return JSON.parse(s)}catch(e){}var u=[];try{u=JSON.parse(localStorage.getItem('userLectures')||'[]')}catch(e){}return DEMO.map(function(l){var o=Object.assign({},l);o.x='3 صفحات';delete o.d;return o}).concat(u.map(function(l){var o=Object.assign({},l);o.x=(l.d||'').replace('من جهازك · ','');delete o.d;return o}))}
-function saveMeta(){try{localStorage.setItem('lecturesV2',JSON.stringify(L))}catch(e){}}
-
-/* إنشاء ملف PDF تجريبي (3 صفحات) */
-async function pageJpg(l,k){
-var c=document.createElement('canvas');c.width=1190;c.height=1684;var x=c.getContext('2d');
-x.fillStyle='#fff';x.fillRect(0,0,1190,1684);x.fillStyle='#0F6B63';x.fillRect(0,0,1190,24);
-x.direction='rtl';x.textAlign='right';x.fillStyle='#1B1F2A';x.font='700 76px Tajawal,sans-serif';x.fillText(l.t,1090,260);
-x.fillStyle='#5A606B';x.font='400 44px Tajawal,sans-serif';x.fillText(l.s,1090,340);x.fillText('الصفحة '+(k+1)+' من 3',1090,1560);
-x.fillStyle='#1B1F2A';x.font='400 48px Tajawal,sans-serif';
-['هذه صفحة تجريبية من ملف PDF.','أضف محاضراتك من جهازك لتظهر هنا.'].forEach(function(s,i){x.fillText(s,1090,520+i*90)});
-var b=atob(c.toDataURL('image/jpeg',.85).split(',')[1]),a=new Uint8Array(b.length);
-for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
-function mkPdf(jp){
-var enc=new TextEncoder(),parts=[],off=[],len=0,n=jp.length,kids='';
-function add(v){var b=typeof v==='string'?enc.encode(v):v;parts.push(b);len+=b.length}
-function obj(i,head,st){off[i]=len;add(i+' 0 obj\n'+head+'\n');if(st){add('stream\n');add(st);add('\nendstream\n')}add('endobj\n')}
-for(var k=0;k<n;k++)kids+=(3+3*k)+' 0 R ';
-add('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Kids ['+kids+'] /Count '+n+' >>');
-var cs='q 595 0 0 842 0 0 cm /Im Do Q';
-for(k=0;k<n;k++){
-obj(3+3*k,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im '+(4+3*k)+' 0 R >> >> /Contents '+(5+3*k)+' 0 R >>');
-obj(4+3*k,'<< /Type /XObject /Subtype /Image /Width 1190 /Height 1684 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jp[k].length+' >>',jp[k]);
-obj(5+3*k,'<< /Length '+cs.length+' >>',cs)}
-var xr=len,tot=3+3*n;add('xref\n0 '+tot+'\n0000000000 65535 f \n');
-for(var i=1;i<tot;i++)add(('0000000000'+off[i]).slice(-10)+' 00000 n \n');
-add('trailer\n<< /Size '+tot+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
-return new Blob(parts,{type:'application/pdf'})}
-
-function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-function toast(t){var e=$('toast');e.textContent=t;e.className='on';clearTimeout(toast.h);toast.h=setTimeout(function(){e.className=''},3400)}
-function byId(id){return L.filter(function(x){return x.id===id})[0]}
-
-/* التنزيل */
-async function startDl(l){
-if(active[l.id]||got.has(l.id))return;
-var a=active[l.id]={p:0,stop:false};render();
-try{
-try{await document.fonts.load('700 40px Tajawal','محاضرة')}catch(e){}
-var blob,jp=[];
-for(var i=1;i<=10;i++){await sleep(120);if(a.stop)throw 0;a.p=i/10;paint();if(i===3||i===5||i===7)jp.push(await pageJpg(l,jp.length))}
-blob=mkPdf(jp);
-await put(l.id,blob);got.add(l.id);
-}catch(e){if(!a.stop)toast('تعذّر التنزيل، حاول مرة أخرى')}
-delete active[l.id];render();
-}
-function stopDl(id){if(active[id])active[id].stop=true}
-function paint(){for(var id in active){var c=document.querySelector('[data-ring="'+id+'"]');if(c)c.setAttribute('stroke-dashoffset',C*(1-active[id].p))}}
-
-/* العرض */
-function ctl(l){
-if(got.has(l.id)){
-return tab===2?'<button class="ic plain" data-act="del" data-id="'+l.id+'" aria-label="حذف التنزيل">'+ICON_TR+'</button>':'<span class="ic ok" role="img" aria-label="محمّلة">'+ICON_OK+'</span>';}
-if(active[l.id]){
-return '<button class="ic" data-act="stop" data-id="'+l.id+'" aria-label="إيقاف التنزيل"><svg class="ring" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><circle data-ring="'+l.id+'" cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+C*(1-active[l.id].p)+'"/></svg></button>';}
-return '<button class="ic" data-act="dl" data-id="'+l.id+'" aria-label="تنزيل">'+ICON_DL+'</button>';}
-function render(){
-var q=$('q').value.trim(),items=L.filter(function(l){return tab===1?(!q||l.t.indexOf(q)>-1||l.s.indexOf(q)>-1):got.has(l.id)});
-$('list').innerHTML=items.map(function(l,i){
-return '<li><button class="main" data-act="open" data-id="'+l.id+'"'+(got.has(l.id)?'':' disabled')+'><span class="num">PDF</span><span><div class="t">'+esc(l.t)+'</div><div class="m">'+esc(l.s+' · '+l.x)+'</div></span></button>'+ctl(l)+(tab===1?'<button class="ic plain" data-act="edit" data-id="'+l.id+'" aria-label="تعديل">'+ICON_ED+'</button>':'')+'</li>';}).join('');
-$('empty').hidden=items.length>0;
-$('empty').textContent=tab===1?(L.length?'لا توجد نتائج':'لا توجد محاضرات بعد، أضف ملف PDF من جهازك'):'لا توجد محاضرات محمّلة بعد';
-$('h').textContent=tab===1?'المحاضرات':'التنزيلات';
-$('sub').textContent=tab===1?'محاضرات بصيغة PDF، حمّلها لتقرأها بدون إنترنت':'متاحة بدون إنترنت';
-$('sw').hidden=$('add').hidden=tab!==1;
-$('t1').setAttribute('aria-current',tab===1?'page':'false');
-$('t2').setAttribute('aria-current',tab===2?'page':'false');
-$('t2').textContent='التنزيلات ('+got.size+')';
-}
-
-/* القارئ */
-async function openPdf(id){
-var l=byId(id),b;try{b=await get(id)}catch(e){}
-if(!l||!b){toast('تعذّر فتح المحاضرة');return}
-cur={id:id,blob:b,l:l};$('rt').textContent=l.t;$('pg').innerHTML='<div id="pm">جارٍ فتح الملف…</div>';
-$('rs').hidden=!dls;$('rd').hidden=false;$('rc').focus();
-if(!window.pdfjsLib){$('pm').textContent='تعذّر عرض الملف هنا، يمكنك حفظه في الملفات وفتحه.';return}
-try{
-var pdf=await pdfjsLib.getDocument({data:await b.arrayBuffer()}).promise,w=$('pg').clientWidth-24,dpr=Math.min(window.devicePixelRatio||1,2);
-$('pg').innerHTML='';
-for(var i=1;i<=pdf.numPages;i++){
-if(!cur||cur.id!==id)return;
-var p=await pdf.getPage(i),sc=w/p.getViewport({scale:1}).width,vp=p.getViewport({scale:sc*dpr}),c=document.createElement('canvas');
-c.width=vp.width;c.height=vp.height;c.style.width=(vp.width/dpr)+'px';c.setAttribute('role','img');c.setAttribute('aria-label','الصفحة '+i+' من '+pdf.numPages);
-$('pg').appendChild(c);await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise}
-}catch(e){if(cur&&cur.id===id){$('pg').innerHTML='<div id="pm">تعذّر عرض الملف هنا، يمكنك حفظه في الملفات وفتحه.</div>'}}
-}
-function closePdf(){cur=null;$('rd').hidden=true;$('pg').innerHTML=''}
-async function removeDl(id){var l=byId(id);try{await del(id)}catch(e){}got.delete(id);if(l&&l.u){L=L.filter(function(x){return x.id!==id});saveMeta()}render()}
-
-$('list').addEventListener('click',function(e){
-var b=e.target.closest('button');if(!b)return;
-var id=+b.dataset.id,l=byId(id),a=b.dataset.act;
-if(a==='dl')startDl(l);else if(a==='stop')stopDl(id);else if(a==='del')removeDl(id);else if(a==='open')openPdf(id);else if(a==='edit')openEdit(id);
-});
-$('t1').onclick=function(){tab=1;render()};
-$('t2').onclick=function(){tab=2;render()};
-$('q').addEventListener('input',render);
-$('rc').onclick=closePdf;
-$('rs').onclick=async function(){if(!cur||!dls)return;try{await dls.save({filename:cur.l.t+'.pdf',data:cur.blob})}catch(e){if(!e||e.code!=='declined')toast('تعذّر حفظ الملف')}};
-$('add').onclick=function(){$('file').click()};
-$('file').onchange=async function(){
-var f=this.files[0];this.value='';if(!f)return;
-var id=Date.now(),l={id:id,t:f.name.replace(/\.pdf$/i,''),s:'من جهازك',x:(f.size/1048576).toFixed(1)+' م.ب',u:1};
-try{await put(id,f.slice(0,f.size,'application/pdf'));L.push(l);got.add(id);saveMeta();tab=1;render();toast('أُضيفت المحاضرة')}catch(e){toast('تعذّر حفظ الملف على الجهاز')}};
-var ed=null,delArm=false;
-function openEdit(id){var l=byId(id);if(!l)return;ed=id;delArm=false;$('e1').value=l.t;$('e2').value=l.s;$('e4').textContent='حذف المحاضرة';$('ed').hidden=false;$('e1').focus()}
-function closeEdit(){ed=null;$('ed').hidden=true}
-$('e6').onclick=closeEdit;
-$('e5').onclick=function(){var l=byId(ed);if(!l)return;l.t=$('e1').value.trim()||l.t;l.s=$('e2').value.trim()||l.s;saveMeta();closeEdit();render()};
-$('e4').onclick=async function(){if(!delArm){delArm=true;this.textContent='تأكيد الحذف النهائي';return}var id=ed;closeEdit();try{await del(id)}catch(e){}got.delete(id);L=L.filter(function(x){return x.id!==id});saveMeta();render();toast('حُذفت المحاضرة')};
-$('e3').onclick=function(){$('file2').click()};
-$('file2').onchange=async function(){var f=this.files[0];this.value='';var l=byId(ed);if(!f||!l)return;try{await put(l.id,f.slice(0,f.size,'application/pdf'));got.add(l.id);l.x=(f.size/1048576).toFixed(1)+' م.ب';l.u=1;delete l.src;saveMeta();closeEdit();render();toast('تم استبدال الملف')}catch(e){toast('تعذّر حفظ الملف على الجهاز')}};
-document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(!$('ed').hidden)closeEdit();else if(!$('rd').hidden)closePdf()});
-
-(async function(){
-L=loadMeta();
-render();
-db=await Promise.race([openDB(),sleep(3000).then(function(){return null})]);
-try{(await Promise.race([keys(),sleep(3000).then(function(){return[]})])).forEach(function(k){got.add(k)})}catch(e){}
-L=L.filter(function(l){return !l.u||got.has(l.id)});
-render();
-if(window.claude&&claude.use){claude.use('downloads').then(function(d){dls=d;if(cur)$('rs').hidden=!d}).catch(function(){})}
-})();
+let lectures = starter.map(x=>({...x})); let filter='all'; let isAdmin=false; let editingId=null;
+function ordinalArabic(n){const names=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];return names[n-1]||String(n);}
+function renderLectures(){const q=document.getElementById('search').value.trim().toLowerCase();let data=lectures.filter(x=>(x.title+' '+x.subject+' '+x.desc).toLowerCase().includes(q)).sort((a,b)=>a.id-b.id);const grid=document.getElementById('lecture-grid');document.getElementById('result-count').textContent=data.length+' محاضرات';document.getElementById('stat-count').textContent=String(lectures.length).padStart(2,'0');if(!data.length){grid.innerHTML='<div class="empty">لا توجد محاضرات مطابقة لبحثك حالياً.</div>';return;}grid.innerHTML=data.map(x=>`<article class="lecture"><div class="lecture-top"><span class="lecture-icon">${x.icon||'📄'}</span><span class="tag">المحاضرة ${ordinalArabic(lectures.slice().sort((a,b)=>a.id-b.id).findIndex(v=>v.id===x.id)+1)}</span></div><div class="lecture-body"><h3>${esc(x.title)}</h3><p>${esc(x.desc||'محاضرة تعليمية متاحة للاطلاع.')}</p><div class="lecture-meta"><span>${x.kind||'PDF'}</span><span>${x.date}</span></div><div class="lecture-actions"><button onclick="viewLecture(${x.id})">اطّلع على المحاضرة</button>${x.url?`<button class="secondary" onclick="downloadLecture(${x.id})">تحميل</button>`:''}</div></div></article>`).join('');}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function setFilter(v,el){filter=v;document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderLectures();}
+function openAdmin(){document.getElementById('admin-modal').classList.add('show');}
+function closeAdmin(){document.getElementById('admin-modal').classList.remove('show');}
+function login(e){e.preventDefault();if(document.getElementById('admin-password').value==='admin123'){isAdmin=true;document.getElementById('login-view').style.display='none';document.getElementById('manage-view').style.display='block';document.getElementById('modal-title').textContent='إدارة المحاضرات';renderAdminLectures();}else toast('كلمة المرور غير صحيحة');}
+function logout(){cancelEdit();isAdmin=false;document.getElementById('login-view').style.display='block';document.getElementById('manage-view').style.display='none';document.getElementById('admin-password').value='';document.getElementById('modal-title').textContent='دخول الأستاذ';}
+function renderAdminLectures(){const list=document.getElementById('admin-lecture-list');list.innerHTML=lectures.slice().sort((a,b)=>a.id-b.id).map(x=>`<div class="admin-item"><div><strong>${esc(x.title)}</strong><small>المحاضرة ${ordinalArabic(lectures.slice().sort((a,b)=>a.id-b.id).findIndex(v=>v.id===x.id)+1)}</small></div><div class="admin-item-actions"><button type="button" onclick="editLecture(${x.id})">تعديل</button><button type="button" class="danger" onclick="deleteLecture(${x.id})">حذف</button></div></div>`).join('')||'<p class="admin-note">لا توجد محاضرات حالياً.</p>';}
+function editLecture(id){const x=lectures.find(v=>v.id===id);if(!x||!isAdmin)return;editingId=id;document.getElementById('lecture-title').value=x.title;document.getElementById('lecture-desc').value=x.desc||'';document.getElementById('lecture-file').value='';document.getElementById('lecture-submit').textContent='حفظ التعديلات';document.getElementById('cancel-edit').style.display='block';document.getElementById('lecture-title').focus();}
+function cancelEdit(){editingId=null;const form=document.getElementById('lecture-form');if(form)form.reset();const submit=document.getElementById('lecture-submit');if(submit)submit.textContent='إضافة المحاضرة';const cancel=document.getElementById('cancel-edit');if(cancel)cancel.style.display='none';}
+function deleteLecture(id){if(!isAdmin)return;const x=lectures.find(v=>v.id===id);if(!x||!confirm('هل أنت متأكد من حذف المحاضرة «'+x.title+'»؟'))return;if(x.url)URL.revokeObjectURL(x.url);lectures=lectures.filter(v=>v.id!==id);if(editingId===id)cancelEdit();renderLectures();renderAdminLectures();toast('تم حذف المحاضرة من المعاينة');}
+function addLecture(e){e.preventDefault();if(!isAdmin)return;const file=document.getElementById('lecture-file').files[0];if(file&&file.type!=='application/pdf'){toast('يرجى اختيار ملف PDF');return;}const title=document.getElementById('lecture-title').value.trim();const desc=document.getElementById('lecture-desc').value;const today=new Date().toISOString().slice(0,10);if(editingId!==null){const item=lectures.find(x=>x.id===editingId);if(!item)return;item.title=title;item.desc=desc;item.date=today;if(file){if(item.url)URL.revokeObjectURL(item.url);item.url=URL.createObjectURL(file);item.fileName=file.name;}cancelEdit();toast('تم حفظ تعديلات المحاضرة');}else{const item={id:Math.max(0,...lectures.map(x=>x.id))+1,title,subject:'البرمجيات الحرة والبرمجيات مفتوحة المصدر',desc,date:today,icon:'📘',kind:'PDF'};if(file){item.url=URL.createObjectURL(file);item.fileName=file.name;}lectures.push(item);e.target.reset();toast('تمت إضافة المحاضرة في المعاينة');}renderLectures();renderAdminLectures();}
+function viewLecture(id){const x=lectures.find(v=>v.id===id);if(x.url){window.open(x.url,'_blank');}else toast('هذه محاضرة نموذجية. أضف ملف PDF من دخول الأستاذ لعرضه.');}
+function downloadLecture(id){const x=lectures.find(v=>v.id===id);if(x&&x.url){const a=document.createElement('a');a.href=x.url;a.download=x.fileName||'lecture.pdf';a.click();}}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
+renderLectures();
 </script>
 </body>
 </html>
