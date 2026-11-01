@@ -242,9 +242,7 @@ footer { background:#EAF1FF;color:#5F7395;border-top:1px solid #DCE7F8;padding:2
   <section class="grid" id="lecture-grid"></section>
 </main>
 <footer id="about">© 2026 محاضراتي — فضاؤكم للتعلم والمعرفة</footer>
-</div>
-<div class="modal-backdrop" id="admin-modal" onclick="if(event.target===this)closeAdmin()"><div class="modal"><div class="modal-head"><h2 id="modal-title">دخول الأستاذ</h2><button class="close" onclick="closeAdmin()">×</button></div><div id="login-view"><form class="admin-form" onsubmit="login(event)"><label>البريد الإلكتروني<input id="admin-email" type="email" autocomplete="username" placeholder="بريد الأستاذ" required></label><label>كلمة المرور<input id="admin-password" type="password" autocomplete="current-password" placeholder="أدخل كلمة المرور" required></label><button type="submit">دخول إلى لوحة الإدارة</button><div class="admin-note">الدخول يتم عبر حساب الأستاذ المسجل في Supabase.</div></form></div><div id="manage-view" style="display:none"><form class="admin-form" id="lecture-form" onsubmit="addLecture(event)"><label>عنوان المحاضرة<input id="lecture-title" required placeholder="مثال: مقدمة في البرمجيات الحرة"></label><label>المقياس<input value="البرمجيات الحرة والبرمجيات مفتوحة المصدر" disabled></label><label>وصف مختصر<textarea id="lecture-desc" placeholder="اكتب نبذة عن المحاضرة"></textarea></label><label>ملف المحاضرة (PDF) — اختياري عند التعديل<input id="lecture-file" type="file" accept=".pdf,application/pdf"></label><button id="lecture-submit" type="submit">إضافة المحاضرة</button><button id="cancel-edit" type="button" class="chip" style="display:none" onclick="cancelEdit()">إلغاء التعديل</button></form><h3>المحاضرات الحالية</h3><div class="admin-list" id="admin-lecture-list"></div><p class="admin-note">تُحفظ المحاضرات وملفات PDF في قاعدة البيانات والتخزين المشترك.</p><button class="chip" onclick="logout()">تسجيل الخروج</button></div></div></div>
-<div class="toast" id="toast"></div>
+</div
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co';
