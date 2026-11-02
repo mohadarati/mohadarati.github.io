@@ -65,6 +65,7 @@ button:disabled{opacity:.55;cursor:not-allowed}button.secondary{background:#eaf1
 <label>عنوان البحث أو الموعد<input id="res-title" type="text" required maxlength="200"></label>
 <label>تفاصيل<textarea id="res-desc" maxlength="2000"></textarea></label>
 <label>تاريخ التسليم<input id="res-date" type="date" required></label>
+<label>ملف البحث (PDF، اختياري، حتى 50 ميغابايت)<input id="res-file" type="file" accept="application/pdf"></label>
 <div class="actions"><button id="res-submit" type="submit">إضافة إلى الرزنامة</button><button id="res-cancel" class="secondary hidden" type="button">إلغاء التعديل</button></div>
 </form>
 <h2 style="margin-top:22px">المواعيد المسجلة</h2><div id="admin-research-list"><p class="note">جارٍ التحميل…</p></div>
@@ -176,7 +177,7 @@ async function loadExtras(){
  const b=await db.from('books').select('*').order('created_at',{ascending:true});
  if(b.error)notify('تعذر تحميل الكتب: '+b.error.message);else{books=b.data||[];renderExtra('admin-book-list',books,'book',x=>x.title,x=>'');}
  const r=await db.from('research_schedule').select('*').order('due_date',{ascending:true});
- if(r.error)notify('تعذر تحميل الرزنامة: '+r.error.message);else{research=r.data||[];renderExtra('admin-research-list',research,'res',x=>x.title,x=>x.due_date||'');}
+ if(r.error)notify('تعذر تحميل الرزنامة: '+r.error.message);else{research=r.data||[];renderExtra('admin-research-list',research,'res',x=>x.title,x=>(x.due_date||'')+(x.file_url?' — 📎 يوجد ملف':''));}
 }
 function renderExtra(listId,rows,kind,titleOf,subOf){
  const el=$(listId);
@@ -216,16 +217,27 @@ async function deleteBook(id){
  if(x.file_url){const p=storagePath(x.file_url);if(p)await db.storage.from('lectures-files').remove([p]);}
  await loadExtras();notify('تم حذف الكتاب.');
 }
-function editRes(id){const x=research.find(v=>String(v.id)===String(id));if(!x)return;editingRes=id;$('res-title').value=x.title;$('res-desc').value=x.description||'';$('res-date').value=x.due_date||'';$('res-submit').textContent='حفظ التعديلات';$('res-cancel').classList.remove('hidden');$('research-admin').scrollIntoView({behavior:'smooth'});}
+function editRes(id){const x=research.find(v=>String(v.id)===String(id));if(!x)return;editingRes=id;$('res-title').value=x.title;$('res-desc').value=x.description||'';$('res-date').value=x.due_date||'';$('res-file').value='';$('res-submit').textContent='حفظ التعديلات';$('res-cancel').classList.remove('hidden');$('research-admin').scrollIntoView({behavior:'smooth'});}
 function cancelRes(){editingRes=null;$('research-form').reset();$('res-submit').textContent='إضافة إلى الرزنامة';$('res-cancel').classList.add('hidden');}
 async function saveRes(e){
  e.preventDefault();
  if(!isAdmin||!await verifyTeacher()){notify('انتهت الجلسة أو لا تملك صلاحية الأستاذ.');return;}
  const btn=$('res-submit');btn.disabled=true;
- const row={title:$('res-title').value.trim(),description:$('res-desc').value.trim(),due_date:$('res-date').value};
+ const file=$('res-file').files[0];
+ if(file&&(file.type!=='application/pdf'||file.size>52428800)){notify('اختر ملف PDF لا يتجاوز 50 ميغابايت.');btn.disabled=false;return;}
+ const old=editingRes!==null?research.find(x=>String(x.id)===String(editingRes)):null;
+ let file_url=old?.file_url||null;
+ if(file){
+  const path=crypto.randomUUID()+'.pdf';
+  const {error}=await db.storage.from('lectures-files').upload(path,file,{contentType:'application/pdf',upsert:false});
+  if(error){notify('فشل رفع الملف: '+error.message);btn.disabled=false;return;}
+  file_url=db.storage.from('lectures-files').getPublicUrl(path).data.publicUrl;
+ }
+ const row={title:$('res-title').value.trim(),description:$('res-desc').value.trim(),due_date:$('res-date').value,file_url};
  const res=editingRes!==null?await db.from('research_schedule').update(row).eq('id',editingRes):await db.from('research_schedule').insert(row);
  btn.disabled=false;
  if(res.error){notify('تعذر الحفظ: '+res.error.message);return;}
+ if(editingRes!==null&&file&&old?.file_url){const p=storagePath(old.file_url);if(p)await db.storage.from('lectures-files').remove([p]);}
  const was=editingRes!==null;cancelRes();await loadExtras();notify(was?'تم تحديث الموعد.':'تمت الإضافة إلى الرزنامة.');
 }
 async function deleteRes(id){
@@ -234,6 +246,7 @@ async function deleteRes(id){
  if(!x||!confirm('هل تريد حذف «'+x.title+'»؟'))return;
  const {error}=await db.from('research_schedule').delete().eq('id',id);
  if(error){notify('تعذر الحذف: '+error.message);return;}
+ if(x.file_url){const p=storagePath(x.file_url);if(p)await db.storage.from('lectures-files').remove([p]);}
  await loadExtras();notify('تم الحذف.');
 }
 $('book-form').addEventListener('submit',saveBook);$('book-cancel').addEventListener('click',cancelBook);
