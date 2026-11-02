@@ -36,6 +36,9 @@ main{max-width:1160px;margin:-30px auto 0;padding:0 22px 66px;position:relative}
 .lecture-actions{display:flex;gap:8px;margin-top:14px}.lecture-actions a{flex:1;text-align:center;text-decoration:none;background:#155eef;color:#fff;border-radius:10px;padding:11px;font-size:12px;font-weight:700}
 .lecture-actions a.secondary{background:#eaf1ff;color:#155eef}
 .empty{grid-column:1/-1;text-align:center;padding:38px;color:#7183a2}
+.row{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #e3eaf5;border-radius:14px;padding:14px 16px;margin:10px 0;background:#fbfcff}
+.row strong{color:#173b76;display:block}.row small{color:#7183a2;display:block;margin-top:4px;line-height:1.8}
+.date-badge{background:#eaf1ff;color:#155eef;border-radius:30px;padding:7px 13px;font-size:13px;font-weight:700;white-space:nowrap}
 footer{background:#eaf1ff;color:#5f7395;border-top:1px solid #dce7f8;text-align:center;padding:28px;font-size:12px}
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.nav{display:none}.hero{padding-top:48px}}
 @media(max-width:540px){.grid{grid-template-columns:1fr}.hero{padding:40px 20px 65px}.stats{justify-content:space-between;gap:12px}.stat strong{font-size:22px}main{padding-left:14px;padding-right:14px}.panel{padding:18px}.section-head{align-items:start;flex-direction:column}}
@@ -45,7 +48,7 @@ footer{background:#eaf1ff;color:#5f7395;border-top:1px solid #dce7f8;text-align:
 <div class="app">
 <header class="topbar">
   <div class="brand"><div class="logo">م</div><span>موقع الأستاذ عثماني</span></div>
-  <nav class="nav"><a href="#home">الرئيسية</a><a href="#lectures">المحاضرات</a><a href="#about">عن المنصة</a></nav>
+  <nav class="nav"><a href="#home">الرئيسية</a><a href="#lectures">المحاضرات</a><a href="#books">الكتب</a><a href="#research">رزنامة البحوث</a><a href="#about">عن المنصة</a></nav>
 </header>
 <section class="hero" id="home">
   <div class="hero-inner">
@@ -64,6 +67,10 @@ footer{background:#eaf1ff;color:#5f7395;border-top:1px solid #dce7f8;text-align:
   </section>
   <div class="section-head"><div><h2>المحاضرات</h2><div class="muted">محتوى دراسي منظم لمساعدتك على المراجعة</div></div></div>
   <section class="grid" id="lecture-grid"><div class="empty">جارٍ تحميل المحاضرات…</div></section>
+  <div class="section-head" id="books"><div><h2>الكتب</h2><div class="muted">كتب ومراجع مقترحة لمساعدتك في المقياس</div></div></div>
+  <section class="grid" id="book-grid"><div class="empty">جارٍ تحميل الكتب…</div></section>
+  <div class="section-head" id="research"><div><h2>رزنامة البحوث</h2><div class="muted">مواعيد البحوث والأعمال المطلوبة</div></div></div>
+  <section class="panel" id="research-list"><div class="empty">جارٍ تحميل الرزنامة…</div></section>
 </main>
 <footer id="about">© 2026 محاضراتي — فضاؤكم للتعلم والمعرفة</footer>
 </div>
@@ -92,6 +99,21 @@ async function loadLectures(){
 }
 document.getElementById('search').addEventListener('input',renderLectures);
 loadLectures();
+async function loadBooks(){
+ const grid=document.getElementById('book-grid');
+ const {data,error}=await db.from('books').select('*').order('created_at',{ascending:true});
+ if(error){grid.innerHTML='<div class="empty">تعذر تحميل الكتب حالياً.</div>';console.error(error);return;}
+ if(!data.length){grid.innerHTML='<div class="empty">لا توجد كتب منشورة حالياً.</div>';return;}
+ grid.innerHTML=data.map(x=>`<article class="lecture"><div class="lecture-top"><span class="lecture-icon">📚</span><span class="tag">كتاب</span></div><div class="lecture-body"><h3>${esc(x.title)}</h3><p>${esc(x.description||'كتاب مرجعي متاح للاطلاع.')}</p><div class="lecture-actions">${x.file_url?`<a href="${esc(x.file_url)}" target="_blank" rel="noopener">اطّلع على الكتاب</a><a class="secondary" href="${esc(x.file_url)}" target="_blank" rel="noopener" download>تحميل</a>`:'<span class="muted">الملف غير متوفر</span>'}</div></div></article>`).join('');
+}
+async function loadResearch(){
+ const box=document.getElementById('research-list');
+ const {data,error}=await db.from('research_schedule').select('*').order('due_date',{ascending:true});
+ if(error){box.innerHTML='<div class="empty">تعذر تحميل الرزنامة حالياً.</div>';console.error(error);return;}
+ if(!data.length){box.innerHTML='<div class="empty">لا توجد مواعيد بحوث حالياً.</div>';return;}
+ box.innerHTML=data.map(x=>`<div class="row"><div><strong>${esc(x.title)}</strong>${x.description?`<small>${esc(x.description)}</small>`:''}</div><span class="date-badge">${x.due_date?esc(new Date(x.due_date+'T00:00:00').toLocaleDateString('ar-DZ')):'—'}</span></div>`).join('');
+}
+loadBooks();loadResearch();
 </script>
 </body>
 </html>
