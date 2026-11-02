@@ -47,6 +47,28 @@ button:disabled{opacity:.55;cursor:not-allowed}button.secondary{background:#eaf1
 </form>
 </div>
 <div class="panel"><h2>المحاضرات المنشورة</h2><div id="admin-lecture-list"><p class="note">جارٍ التحميل…</p></div></div>
+
+<div class="panel">
+<h1 id="books-admin">الكتب</h1>
+<form id="book-form">
+<label>عنوان الكتاب<input id="book-title" type="text" required maxlength="200"></label>
+<label>وصف الكتاب<textarea id="book-desc" maxlength="2000"></textarea></label>
+<label>ملف الكتاب (PDF، حتى 50 ميغابايت)<input id="book-file" type="file" accept="application/pdf"></label>
+<div class="actions"><button id="book-submit" type="submit">إضافة الكتاب</button><button id="book-cancel" class="secondary hidden" type="button">إلغاء التعديل</button></div>
+</form>
+<h2 style="margin-top:22px">الكتب المنشورة</h2><div id="admin-book-list"><p class="note">جارٍ التحميل…</p></div>
+</div>
+
+<div class="panel">
+<h1 id="research-admin">رزنامة البحوث</h1>
+<form id="research-form">
+<label>عنوان البحث أو الموعد<input id="res-title" type="text" required maxlength="200"></label>
+<label>تفاصيل<textarea id="res-desc" maxlength="2000"></textarea></label>
+<label>تاريخ التسليم<input id="res-date" type="date" required></label>
+<div class="actions"><button id="res-submit" type="submit">إضافة إلى الرزنامة</button><button id="res-cancel" class="secondary hidden" type="button">إلغاء التعديل</button></div>
+</form>
+<h2 style="margin-top:22px">المواعيد المسجلة</h2><div id="admin-research-list"><p class="note">جارٍ التحميل…</p></div>
+</div>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -68,7 +90,7 @@ async function loadLectures(){
  const {data,error}=await db.from('lectures').select('*').order('lecture_number',{ascending:true});
  if(error){notify('تعذر تحميل المحاضرات: '+error.message);return;}
  lectures=(data||[]).map(x=>({id:x.id,title:x.title,desc:x.description||'',url:x.file_url||'',lecture_number:x.lecture_number}));
- renderAdminLectures();
+ renderAdminLectures();loadExtras();
 }
 function showManager(){document.getElementById('login-panel').classList.add('hidden');document.getElementById('manage-panel').classList.remove('hidden');}
 async function login(e){
@@ -148,6 +170,74 @@ async function deleteLecture(id){
  if(x.url){const p=storagePath(x.url);if(p)await db.storage.from('lectures-files').remove([p]);}
  await loadLectures();notify('تم حذف المحاضرة.');
 }
+let books=[],research=[],editingBook=null,editingRes=null;
+const $=id=>document.getElementById(id);
+async function loadExtras(){
+ const b=await db.from('books').select('*').order('created_at',{ascending:true});
+ if(b.error)notify('تعذر تحميل الكتب: '+b.error.message);else{books=b.data||[];renderExtra('admin-book-list',books,'book',x=>x.title,x=>'');}
+ const r=await db.from('research_schedule').select('*').order('due_date',{ascending:true});
+ if(r.error)notify('تعذر تحميل الرزنامة: '+r.error.message);else{research=r.data||[];renderExtra('admin-research-list',research,'res',x=>x.title,x=>x.due_date||'');}
+}
+function renderExtra(listId,rows,kind,titleOf,subOf){
+ const el=$(listId);
+ el.innerHTML=rows.map(x=>`<div class="item"><div><strong>${esc(titleOf(x))}</strong><small>${esc(subOf(x))}</small></div><div class="actions"><button type="button" class="secondary" data-e="${esc(x.id)}">تعديل</button><button type="button" class="danger" data-d="${esc(x.id)}">حذف</button></div></div>`).join('')||'<p class="note">لا توجد عناصر حالياً.</p>';
+ el.querySelectorAll('[data-e]').forEach(b=>b.addEventListener('click',()=>kind==='book'?editBook(b.dataset.e):editRes(b.dataset.e)));
+ el.querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>kind==='book'?deleteBook(b.dataset.d):deleteRes(b.dataset.d)));
+}
+function editBook(id){const x=books.find(v=>String(v.id)===String(id));if(!x)return;editingBook=id;$('book-title').value=x.title;$('book-desc').value=x.description||'';$('book-file').value='';$('book-submit').textContent='حفظ التعديلات';$('book-cancel').classList.remove('hidden');$('books-admin').scrollIntoView({behavior:'smooth'});}
+function cancelBook(){editingBook=null;$('book-form').reset();$('book-submit').textContent='إضافة الكتاب';$('book-cancel').classList.add('hidden');}
+async function saveBook(e){
+ e.preventDefault();
+ if(!isAdmin||!await verifyTeacher()){notify('انتهت الجلسة أو لا تملك صلاحية الأستاذ.');return;}
+ const btn=$('book-submit');btn.disabled=true;
+ const file=$('book-file').files[0];
+ if(file&&(file.type!=='application/pdf'||file.size>52428800)){notify('اختر ملف PDF لا يتجاوز 50 ميغابايت.');btn.disabled=false;return;}
+ const title=$('book-title').value.trim(),description=$('book-desc').value.trim();
+ const old=editingBook!==null?books.find(x=>String(x.id)===String(editingBook)):null;
+ let file_url=old?.file_url||null;
+ if(file){
+  const path=crypto.randomUUID()+'.pdf';
+  const {error}=await db.storage.from('lectures-files').upload(path,file,{contentType:'application/pdf',upsert:false});
+  if(error){notify('فشل رفع الملف: '+error.message);btn.disabled=false;return;}
+  file_url=db.storage.from('lectures-files').getPublicUrl(path).data.publicUrl;
+ }
+ const res=editingBook!==null?await db.from('books').update({title,description,file_url}).eq('id',editingBook):await db.from('books').insert({title,description,file_url});
+ btn.disabled=false;
+ if(res.error){notify('تعذر حفظ الكتاب: '+res.error.message);return;}
+ if(editingBook!==null&&file&&old?.file_url){const p=storagePath(old.file_url);if(p)await db.storage.from('lectures-files').remove([p]);}
+ const was=editingBook!==null;cancelBook();await loadExtras();notify(was?'تم تحديث الكتاب.':'تمت إضافة الكتاب.');
+}
+async function deleteBook(id){
+ if(!isAdmin||!await verifyTeacher()){notify('انتهت الجلسة أو لا تملك صلاحية الأستاذ.');return;}
+ const x=books.find(v=>String(v.id)===String(id));
+ if(!x||!confirm('هل تريد حذف الكتاب «'+x.title+'»؟'))return;
+ const {error}=await db.from('books').delete().eq('id',id);
+ if(error){notify('تعذر الحذف: '+error.message);return;}
+ if(x.file_url){const p=storagePath(x.file_url);if(p)await db.storage.from('lectures-files').remove([p]);}
+ await loadExtras();notify('تم حذف الكتاب.');
+}
+function editRes(id){const x=research.find(v=>String(v.id)===String(id));if(!x)return;editingRes=id;$('res-title').value=x.title;$('res-desc').value=x.description||'';$('res-date').value=x.due_date||'';$('res-submit').textContent='حفظ التعديلات';$('res-cancel').classList.remove('hidden');$('research-admin').scrollIntoView({behavior:'smooth'});}
+function cancelRes(){editingRes=null;$('research-form').reset();$('res-submit').textContent='إضافة إلى الرزنامة';$('res-cancel').classList.add('hidden');}
+async function saveRes(e){
+ e.preventDefault();
+ if(!isAdmin||!await verifyTeacher()){notify('انتهت الجلسة أو لا تملك صلاحية الأستاذ.');return;}
+ const btn=$('res-submit');btn.disabled=true;
+ const row={title:$('res-title').value.trim(),description:$('res-desc').value.trim(),due_date:$('res-date').value};
+ const res=editingRes!==null?await db.from('research_schedule').update(row).eq('id',editingRes):await db.from('research_schedule').insert(row);
+ btn.disabled=false;
+ if(res.error){notify('تعذر الحفظ: '+res.error.message);return;}
+ const was=editingRes!==null;cancelRes();await loadExtras();notify(was?'تم تحديث الموعد.':'تمت الإضافة إلى الرزنامة.');
+}
+async function deleteRes(id){
+ if(!isAdmin||!await verifyTeacher()){notify('انتهت الجلسة أو لا تملك صلاحية الأستاذ.');return;}
+ const x=research.find(v=>String(v.id)===String(id));
+ if(!x||!confirm('هل تريد حذف «'+x.title+'»؟'))return;
+ const {error}=await db.from('research_schedule').delete().eq('id',id);
+ if(error){notify('تعذر الحذف: '+error.message);return;}
+ await loadExtras();notify('تم الحذف.');
+}
+$('book-form').addEventListener('submit',saveBook);$('book-cancel').addEventListener('click',cancelBook);
+$('research-form').addEventListener('submit',saveRes);$('res-cancel').addEventListener('click',cancelRes);
 document.getElementById('login-form').addEventListener('submit',login);
 document.getElementById('lecture-form').addEventListener('submit',addLecture);
 document.getElementById('cancel-edit').addEventListener('click',cancelEdit);
