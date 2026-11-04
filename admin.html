@@ -178,6 +178,8 @@ async function loadAdminAnnouncements() {
 }
 
 async function deleteAnnouncement(id) {
+    alert('تم استدعاء دالة الحذف، ورقم الإعلان هو: ' + id);
+
     if (!isAdmin) return;
 
     if (!confirm('هل تريد حذف هذا الإعلان؟')) return;
