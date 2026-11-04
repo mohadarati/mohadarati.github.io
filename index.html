@@ -108,10 +108,77 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let lectures=[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function ordinalArabic(n){const names=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];return names[n-1]||String(n);}
-function renderLectures()
-    // تحميل إعلانات الأستاذ
+
+function renderLectures() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+
+    const data = lectures
+        .filter(x => (x.title + ' ' + x.desc).toLowerCase().includes(q))
+        .sort((a, b) => (a.lecture_number || 0) - (b.lecture_number || 0));
+
+    const grid = document.getElementById('lecture-grid');
+
+    document.getElementById('result-count').textContent = data.length + ' محاضرة';
+    document.getElementById('stat-count').textContent = String(lectures.length).padStart(2, '0');
+
+    if (!data.length) {
+        grid.innerHTML = '<div class="empty">لا توجد محاضرات منشورة حالياً.</div>';
+        return;
+    }
+
+    grid.innerHTML = data.map(x => `
+        <article class="lecture">
+            <div class="lecture-top">
+                <span class="lecture-icon">📘</span>
+                <span class="tag">المحاضرة ${ordinalArabic(x.lecture_number)}</span>
+            </div>
+            <div class="lecture-body">
+                <h3>${esc(x.title)}</h3>
+                <p>${esc(x.desc || 'محاضرة تعليمية متاحة للاطلاع.')}</p>
+                <div class="lecture-meta">
+                    <span>PDF</span>
+                    <span>${esc(x.date)}</span>
+                </div>
+                <div class="lecture-actions">
+                    ${x.url ? `
+                        <a href="${esc(x.url)}" target="_blank" rel="noopener">اطّلع على المحاضرة</a>
+                        <a class="secondary" href="${esc(x.url)}" target="_blank" rel="noopener" download>تحميل</a>
+                    ` : '<span class="muted">الملف غير متوفر</span>'}
+                </div>
+            </div>
+        </article>
+    `).join('');
+}
+
+async function loadLectures() {
+    const { data, error } = await db
+        .from('lectures')
+        .select('*')
+        .order('lecture_number', { ascending: true });
+
+    if (error) {
+        document.getElementById('lecture-grid').innerHTML =
+            '<div class="empty">تعذر تحميل المحاضرات حالياً. يرجى المحاولة لاحقاً.</div>';
+        console.error(error);
+        return;
+    }
+
+    lectures = (data || []).map(x => ({
+        id: x.id,
+        title: x.title,
+        desc: x.description || '',
+        url: x.file_url || '',
+        date: x.created_at ? new Date(x.created_at).toLocaleDateString('ar-DZ') : '',
+        lecture_number: x.lecture_number
+    }));
+
+    renderLectures();
+}
+
+// تحميل إعلانات الأستاذ
 async function loadAnnouncements() {
     const list = document.getElementById('announcements-list');
+    if (!list) return;
 
     const { data, error } = await db
         .from('announcements')
@@ -149,63 +216,10 @@ db.channel('announcements-live')
         table: 'announcements'
     }, () => loadAnnouncements())
     .subscribe();
-{
- const q=document.getElementById('search').value.trim().toLowerCase();
- const data=lectures.filter(x=>(x.title+' '+x.desc).toLowerCase().includes(q)).sort((a,b)=>(a.lecture_number||0)-(b.lecture_number||0));
- const grid=document.getElementById('lecture-grid');
- document.getElementById('result-count').textContent=data.length+' محاضرة';
- document.getElementById('stat-count').textContent=String(lectures.length).padStart(2,'0');
- if(!data.length){grid.innerHTML='<div class="empty">لا توجد محاضرات منشورة حالياً.</div>';return;}
- grid.innerHTML=data.map(x=>`<article class="lecture"><div class="lecture-top"><span class="lecture-icon">📘</span><span class="tag">المحاضرة ${ordinalArabic(x.lecture_number)}</span></div><div class="lecture-body"><h3>${esc(x.title)}</h3><p>${esc(x.desc||'محاضرة تعليمية متاحة للاطلاع.')}</p><div class="lecture-meta"><span>PDF</span><span>${esc(x.date)}</span></div><div class="lecture-actions">${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">اطّلع على المحاضرة</a><a class="secondary" href="${esc(x.url)}" target="_blank" rel="noopener" download>تحميل</a>`:'<span class="muted">الملف غير متوفر</span>'}</div></div></article>`).join('');
-}
-async function loadLectures(){
- const {data,error}=await db.from('lectures').select('*').order('lecture_number',{ascending:true});
- if(error){document.getElementById('lecture-grid').innerHTML='<div class="empty">تعذر تحميل المحاضرات حالياً. يرجى المحاولة لاحقاً.</div>';console.error(error);return;}
- lectures=(data||[]).map(x=>({id:x.id,title:x.title,desc:x.description||'',url:x.file_url||'',date:x.created_at?new Date(x.created_at).toLocaleDateString('ar-DZ'):'',lecture_number:x.lecture_number}));
- renderLectures();// عرض الإعلانات في الصفحة الرئيسية
-async function loadAnnouncements() {
-    const list = document.getElementById('announcements-list');
 
-    const { data, error } = await db
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('خطأ في تحميل الإعلانات:', error);
-        list.innerHTML = '<p>تعذر تحميل الإعلانات.</p>';
-        return;
-    }
-
-    if (!data || data.length === 0) {
-        list.innerHTML = '<p>لا توجد إعلانات حاليًا.</p>';
-        return;
-    }
-
-    list.innerHTML = data.map(item => `
-        <div class="announcement-item">
-            <h3>${esc(item.title)}</h3>
-            <p>${esc(item.content).replace(/\n/g, '<br>')}</p>
-            <small>${new Date(item.created_at).toLocaleDateString('ar-DZ')}</small>
-        </div>
-    `).join('');
-}
-
-// تحميل الإعلانات عند فتح الصفحة
-loadAnnouncements();
-
-// تحديث الإعلانات تلقائيًا عند النشر أو التعديل أو الحذف
-db.channel('announcements-live')
-    .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'announcements'
-    }, () => loadAnnouncements())
-    .subscribe();
-}
-document.getElementById('search').addEventListener('input',renderLectures);
+document.getElementById('search').addEventListener('input', renderLectures);
 loadLectures();
-async function loadBooks(){
+
  const grid=document.getElementById('book-grid');
  const {data,error}=await db.from('books').select('*').order('created_at',{ascending:true});
  if(error){grid.innerHTML='<div class="empty">تعذر تحميل الكتب حالياً.</div>';console.error(error);return;}
