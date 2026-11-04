@@ -108,7 +108,48 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let lectures=[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function ordinalArabic(n){const names=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];return names[n-1]||String(n);}
-function renderLectures(){
+function renderLectures()
+    // تحميل إعلانات الأستاذ
+async function loadAnnouncements() {
+    const list = document.getElementById('announcements-list');
+
+    const { data, error } = await db
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('خطأ تحميل الإعلانات:', error);
+        list.textContent = 'تعذر تحميل الإعلانات.';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        list.textContent = 'لا توجد إعلانات حاليًا.';
+        return;
+    }
+
+    list.innerHTML = data.map(item => `
+        <div class="announcement-item">
+            <h3>${esc(item.title)}</h3>
+            <p>${esc(item.content).replace(/\n/g, '<br>')}</p>
+            <small>${new Date(item.created_at).toLocaleDateString('ar-DZ')}</small>
+        </div>
+    `).join('');
+}
+
+// تحميل الإعلانات عند فتح الصفحة
+loadAnnouncements();
+
+// تحديث الإعلانات تلقائيًا
+db.channel('announcements-live')
+    .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'announcements'
+    }, () => loadAnnouncements())
+    .subscribe();
+{
  const q=document.getElementById('search').value.trim().toLowerCase();
  const data=lectures.filter(x=>(x.title+' '+x.desc).toLowerCase().includes(q)).sort((a,b)=>(a.lecture_number||0)-(b.lecture_number||0));
  const grid=document.getElementById('lecture-grid');
