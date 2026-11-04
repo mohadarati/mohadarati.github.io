@@ -366,7 +366,13 @@ document.getElementById('cancel-edit').addEventListener('click',cancelEdit);
 document.getElementById('logout-btn').addEventListener('click',logout);
 (async()=>{
  const {data:{session}}=await db.auth.getSession();
- if(session&&await verifyTeacher()){isAdmin=true;showManager();await loadLectures();}
+
+ if(session && await verifyTeacher()){
+    isAdmin=true;
+    showManager();
+    await loadLectures();
+    await loadAdminAnnouncements();
+ }
 })();
 </script>
  <section class="announcement-admin">
