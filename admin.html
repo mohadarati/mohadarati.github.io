@@ -170,9 +170,9 @@ async function loadAdminAnnouncements() {
             <div class="admin-announcement-item">
                 <strong>${esc(item.title)}</strong>
                 <p>${esc(item.content)}</p>
-                <button onclick='deleteAnnouncement(${JSON.stringify(item.id)})'>
-                    حذف الإعلان
-                </button>
+                <button type="button" onclick="window.deleteAnnouncement('${item.id}')">
+    حذف الإعلان
+</button>
             </div>
         `).join('');
 }
