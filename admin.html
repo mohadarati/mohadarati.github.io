@@ -119,6 +119,83 @@ async function verifyTeacher(){
  const {data,error}=await db.rpc('is_teacher');
  return !error&&data===true;
 }
+    // ================= إدارة الإعلانات =================
+
+async function publishAnnouncement() {
+    if (!isAdmin) {
+        alert('غير مسموح لك بنشر الإعلانات');
+        return;
+    }
+
+    const title = document.getElementById('announcement-title').value.trim();
+    const content = document.getElementById('announcement-content').value.trim();
+
+    if (!title || !content) {
+        alert('يرجى كتابة عنوان الإعلان ومحتواه');
+        return;
+    }
+
+    const { error } = await db
+        .from('announcements')
+        .insert([{ title, content }]);
+
+    if (error) {
+        console.error(error);
+        alert('حدث خطأ أثناء نشر الإعلان');
+        return;
+    }
+
+    document.getElementById('announcement-title').value = '';
+    document.getElementById('announcement-content').value = '';
+
+    notify('تم نشر الإعلان بنجاح');
+    loadAdminAnnouncements();
+}
+
+async function loadAdminAnnouncements() {
+    if (!isAdmin) return;
+
+    const { data, error } = await db
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    document.getElementById('admin-announcements-list').innerHTML =
+        data.map(item => `
+            <div class="admin-announcement-item">
+                <strong>${esc(item.title)}</strong>
+                <p>${esc(item.content)}</p>
+                <button onclick="deleteAnnouncement(${item.id})">
+                    حذف الإعلان
+                </button>
+            </div>
+        `).join('');
+}
+
+async function deleteAnnouncement(id) {
+    if (!isAdmin) return;
+
+    if (!confirm('هل تريد حذف هذا الإعلان؟')) return;
+
+    const { error } = await db
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error(error);
+        alert('تعذر حذف الإعلان');
+        return;
+    }
+
+    notify('تم حذف الإعلان');
+    loadAdminAnnouncements();
+}
 async function loadLectures(){
  const {data,error}=await db.from('lectures').select('*').order('lecture_number',{ascending:true});
  if(error){notify('تعذر تحميل المحاضرات: '+error.message);return;}
