@@ -57,8 +57,8 @@ button:disabled{opacity:.55;cursor:not-allowed}button.secondary{background:#eaf1
 <div class="actions"><button id="book-submit" type="submit">إضافة الكتاب</button><button id="book-cancel" class="secondary hidden" type="button">إلغاء التعديل</button></div>
 </form>
 <h2 style="margin-top:22px">الكتب المنشورة</h2><div id="admin-book-list"><p class="note">جارٍ التحميل…</p></div>
-</div>
 
+</div>
 <div class="panel">
 <h1 id="research-admin">رزنامة البحوث</h1>
 <form id="research-form">
@@ -260,5 +260,26 @@ document.getElementById('logout-btn').addEventListener('click',logout);
  if(session&&await verifyTeacher()){isAdmin=true;showManager();await loadLectures();}
 })();
 </script>
+ <section class="announcement-admin">
+    <h2>📢 إدارة الإعلانات</h2>
+
+    <input
+        type="text"
+        id="announcement-title"
+        placeholder="عنوان الإعلان"
+    >
+
+    <textarea
+        id="announcement-content"
+        placeholder="اكتب نص الإعلان هنا..."
+    ></textarea>
+
+    <button onclick="publishAnnouncement()">
+        نشر الإعلان
+    </button>
+
+    <h3>الإعلانات المنشورة</h3>
+    <div id="admin-announcements-list"></div>
+</section>
 </body>
 </html>
