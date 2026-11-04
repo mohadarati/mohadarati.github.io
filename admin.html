@@ -177,7 +177,10 @@ async function loadAdminAnnouncements() {
         `).join('');
 }
 
-async function deleteAnnouncement(id) {
+window.deleteAnnouncement = async function(id) {
+    alert('تم استدعاء الحذف، رقم الإعلان: ' + id);
+
+    if (!isAdmin) return;
     alert('تم استدعاء دالة الحذف، ورقم الإعلان هو: ' + id);
 
     if (!isAdmin) return;
