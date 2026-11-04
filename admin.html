@@ -103,6 +103,22 @@ button:disabled{opacity:.55;cursor:not-allowed}button.secondary{background:#eaf1
 <h2 style="margin-top:22px">المواعيد المسجلة</h2><div id="admin-research-list"><p class="note">جارٍ التحميل…</p></div>
 </div>
 </section>
+<section class="announcement-admin">
+    <h2>📢 إدارة الإعلانات</h2>
+
+    <input type="text" id="announcement-title"
+           placeholder="عنوان الإعلان">
+
+    <textarea id="announcement-content"
+              placeholder="اكتب نص الإعلان هنا..."></textarea>
+
+    <button onclick="publishAnnouncement()">
+        نشر الإعلان
+    </button>
+
+    <h3>الإعلانات المنشورة</h3>
+    <div id="admin-announcements-list"></div>
+</section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
