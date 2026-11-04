@@ -117,7 +117,46 @@ async function loadLectures(){
  const {data,error}=await db.from('lectures').select('*').order('lecture_number',{ascending:true});
  if(error){document.getElementById('lecture-grid').innerHTML='<div class="empty">تعذر تحميل المحاضرات حالياً. يرجى المحاولة لاحقاً.</div>';console.error(error);return;}
  lectures=(data||[]).map(x=>({id:x.id,title:x.title,desc:x.description||'',url:x.file_url||'',date:x.created_at?new Date(x.created_at).toLocaleDateString('ar-DZ'):'',lecture_number:x.lecture_number}));
- renderLectures();
+ renderLectures();// عرض الإعلانات في الصفحة الرئيسية
+async function loadAnnouncements() {
+    const list = document.getElementById('announcements-list');
+
+    const { data, error } = await db
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('خطأ في تحميل الإعلانات:', error);
+        list.innerHTML = '<p>تعذر تحميل الإعلانات.</p>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        list.innerHTML = '<p>لا توجد إعلانات حاليًا.</p>';
+        return;
+    }
+
+    list.innerHTML = data.map(item => `
+        <div class="announcement-item">
+            <h3>${esc(item.title)}</h3>
+            <p>${esc(item.content).replace(/\n/g, '<br>')}</p>
+            <small>${new Date(item.created_at).toLocaleDateString('ar-DZ')}</small>
+        </div>
+    `).join('');
+}
+
+// تحميل الإعلانات عند فتح الصفحة
+loadAnnouncements();
+
+// تحديث الإعلانات تلقائيًا عند النشر أو التعديل أو الحذف
+db.channel('announcements-live')
+    .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'announcements'
+    }, () => loadAnnouncements())
+    .subscribe();
 }
 document.getElementById('search').addEventListener('input',renderLectures);
 loadLectures();
