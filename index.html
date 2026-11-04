@@ -219,7 +219,7 @@ db.channel('announcements-live')
 
 document.getElementById('search').addEventListener('input', renderLectures);
 loadLectures();
-
+async function loadBooks(){
  const grid=document.getElementById('book-grid');
  const {data,error}=await db.from('books').select('*').order('created_at',{ascending:true});
  if(error){grid.innerHTML='<div class="empty">تعذر تحميل الكتب حالياً.</div>';console.error(error);return;}
