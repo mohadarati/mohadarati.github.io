@@ -1,6 +1,41 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة الامتحانات | محاضراتي</title><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;font-family:'Amiri',serif}body{margin:0;background:#f4f7fc;color:#172b4d}header{background:white;padding:15px max(5vw,20px);display:flex;justify-content:space-between;gap:12px;align-items:center;box-shadow:0 3px 18px #18376e14}a{color:#155eef;text-decoration:none;font-weight:bold}main{max-width:900px;margin:30px auto;padding:0 16px}.panel{background:white;border:1px solid #e3eaf5;border-radius:16px;padding:22px;margin-bottom:18px}h1,h2{color:#173b76}label{display:grid;gap:6px;margin:11px 0;font-weight:bold}input,textarea,select{width:100%;padding:11px;border:1px solid #dce5f2;border-radius:9px;font:inherit}textarea{min-height:80px}button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:white;font:inherit;font-weight:bold;cursor:pointer}.secondary{background:#eaf1ff;color:#155eef}.danger{background:#fdecec;color:#b42318}.question-editor{border:1px solid #dce5f2;border-radius:12px;padding:14px;margin:12px 0}.option-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.status{padding:11px;background:#eaf1ff;border-radius:9px;margin:10px 0}.hidden{display:none!important}.item{border:1px solid #e3eaf5;padding:12px;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}@media(max-width:600px){.panel{padding:15px}.item{align-items:flex-start;flex-direction:column}}</style></head><body><header><strong>محاضراتي — إدارة الامتحانات</strong><div><a href="./admin.html">لوحة الأستاذ</a> · <a href="./index.html">الموقع</a></div></header><main>
 <section id="login-panel" class="panel"><h1>دخول الأستاذ</h1><p>سجّل الدخول بحساب الأستاذ المعتمد في Supabase.</p><form id="login-form"><label>البريد الإلكتروني<input id="email" type="email" required></label><label>كلمة المرور<input id="password" type="password" required></label><button>تسجيل الدخول</button></form><div id="login-status" class="status hidden"></div></section>
-<section id="manager" class="hidden"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h1>إنشاء امتحان</h1><button class="secondary" id="logout">تسجيل الخروج</button></div><form id="exam-form"><label>عنوان الامتحان<input id="exam-title" required maxlength="200"></label><label>وصف الامتحان<textarea id="exam-desc"></textarea></label><label>مدة الامتحان بالدقائق<input id="duration" type="number" min="1" max="300" value="60" required></label><label>تاريخ بداية الإتاحة (اختياري)<input id="starts" type="datetime-local"></label><label>تاريخ نهاية الإتاحة (اختياري)<input id="ends" type="datetime-local"></label><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input id="published" type="checkbox" checked style="width:auto"> نشر الامتحان فور الحفظ</label><h2>أسئلة الامتحان</h2><div id="questions"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" id="add-mcq">إضافة سؤال اختيار من متعدد</button><button type="button" class="secondary" id="add-written">إضافة سؤال كتابي</button></div><p style="color:#7183a2;font-size:13px">في سؤال الاختيار من متعدد، أدخل الاختيارات وحدد الإجابة الصحيحة. السؤال الكتابي يصححه الأستاذ بعد الإرسال.</p><button id="save-exam" type="submit">حفظ الامتحان</button></form><div id="save-status" class="status hidden"></div></div><div class="panel"><h2>إدارة الطلبة</h2><p>أنشئ حساباً لكل طالب باستخدام رقم التسجيل الجامعي وكلمة مرور يحددها الأستاذ.</p><form id="student-form"><label>رقم التسجيل الجامعي (8 أرقام)<input id="new-student-number" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" placeholder="37552606" required></label><label>كلمة المرور الأولية<input id="new-student-password" type="password" minlength="8" autocomplete="new-password" required></label><button id="create-student" type="submit">إنشاء حساب الطالب</button></form><div id="student-status" class="status hidden" role="status"></div><p style="font-size:13px;color:#7183a2">سلّم كلمة المرور للطالب بطريقة آمنة، ويمكنه تغييرها لاحقاً إذا أضفت له صفحة تغيير كلمة المرور.</p></div><div class="panel"><h2>الامتحانات المنشأة</h2><div id="exam-list">جارٍ التحميل…</div></div><div class="panel"><h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2><label>اختر الامتحان<select id="results-exam"><option value="">اختر امتحاناً</option></select></label><div id="results-list">اختر امتحاناً لعرض المحاولات.</div></div></section></main>
+<section id="manager" class="hidden"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h1>إنشاء امتحان</h1><button class="secondary" id="logout">تسجيل الخروج</button></div><form id="exam-form"><label>عنوان الامتحان<input id="exam-title" required maxlength="200"></label><label>وصف الامتحان<textarea id="exam-desc"></textarea></label><label>مدة الامتحان بالدقائق<input id="duration" type="number" min="1" max="300" value="60" required></label><label>تاريخ بداية الإتاحة (اختياري)<input id="starts" type="datetime-local"></label><label>تاريخ نهاية الإتاحة (اختياري)<input id="ends" type="datetime-local"></label><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input id="published" type="checkbox" checked style="width:auto"> نشر الامتحان فور الحفظ</label><h2>أسئلة الامتحان</h2><div id="questions"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" id="add-mcq">إضافة سؤال اختيار من متعدد</button><button type="button" class="secondary" id="add-written">إضافة سؤال كتابي</button></div><p style="color:#7183a2;font-size:13px">في سؤال الاختيار من متعدد، أدخل الاختيارات وحدد الإجابة الصحيحة. السؤال الكتابي يصححه الأستاذ بعد الإرسال.</p><button id="save-exam" type="submit">حفظ الامتحان</button></form><div id="save-status" class="status hidden"></div></div>
+<div class="panel">
+  <h2>إدارة الطلبة</h2>
+  <p>أنشئ حساباً لكل طالب باستخدام رقم التسجيل واللقب والاسم وكلمة المرور.</p>
+
+  <form id="student-form">
+    <label>رقم التسجيل الجامعي (8 أرقام)
+      <input id="new-student-number" inputmode="numeric"
+        pattern="[0-9]{8}" minlength="8" maxlength="8"
+        placeholder="38290618" required>
+    </label>
+
+    <label>لقب الطالب
+      <input id="new-student-last-name" type="text"
+        placeholder="عواني" required>
+    </label>
+
+    <label>اسم الطالب
+      <input id="new-student-first-name" type="text"
+        placeholder="محمد" required>
+    </label>
+
+    <label>كلمة المرور الأولية
+      <input id="new-student-password" type="password"
+        minlength="8" autocomplete="new-password" required>
+    </label>
+
+    <button id="create-student" type="submit">إنشاء حساب الطالب</button>
+  </form>
+
+  <div id="student-status" class="status hidden" role="status"></div>
+  <p style="font-size:13px;color:#7183a2">
+    سلّم كلمة المرور للطالب بطريقة آمنة.
+  </p>
+</div>
+<div class="panel"><h2>الامتحانات المنشأة</h2><div id="exam-list">جارٍ التحميل…</div></div><div class="panel"><h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2><label>اختر الامتحان<select id="results-exam"><option value="">اختر امتحاناً</option></select></label><div id="results-list">اختر امتحاناً لعرض المحاولات.</div></div></section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co',SUPABASE_KEY='sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b',db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let qcount=0;
 function status(id,msg){$(id).textContent=msg;$(id).classList.remove('hidden')}
