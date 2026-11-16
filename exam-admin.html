@@ -44,7 +44,133 @@ async function login(e){e.preventDefault();const {error}=await db.auth.signInWit
 function addQuestion(type){qcount++;const id='qe'+qcount;const box=document.createElement('div');box.className='question-editor';box.dataset.type=type;box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><strong>${type==='mcq'?'سؤال اختيار من متعدد':'سؤال كتابي'}</strong><button type="button" class="danger remove">حذف السؤال</button></div><label>نص السؤال<textarea class="qtext" required></textarea></label><label>العلامة<input class="points" type="number" min="0.25" step="0.25" value="1" required></label>${type==='mcq'?`<div class="options">${[1,2,3,4].map(n=>`<label class="option-row"><input class="opt" placeholder="الاختيار ${n}" required><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="radio" name="correct_${id}" value="${n-1}" ${n===1?'checked':''} style="width:auto"> صحيحة</label></label>`).join('')}</div>`:'<p style="color:#7183a2">تظهر الإجابة للأستاذ للتصحيح اليدوي بعد تسليم الطالب.</p>'}`;box.querySelector('.remove').addEventListener('click',()=>box.remove());$('questions').appendChild(box);}
 async function saveExam(e){e.preventDefault();if(!await teacher()){status('save-status','انتهت الجلسة أو لا تملك الصلاحية.');return;}const blocks=[...$('questions').querySelectorAll('.question-editor')];if(!blocks.length){status('save-status','أضف سؤالاً واحداً على الأقل قبل الحفظ.');return;}const btn=$('save-exam');btn.disabled=true;const payload={title:$('exam-title').value.trim(),description:$('exam-desc').value.trim(),duration_minutes:Number($('duration').value),is_published:$('published').checked,starts_at:$('starts').value?new Date($('starts').value).toISOString():null,ends_at:$('ends').value?new Date($('ends').value).toISOString():null};const {data:exam,error}=await db.from('exams').insert(payload).select().single();if(error){status('save-status','تعذر إنشاء الامتحان: '+error.message);btn.disabled=false;return;}for(let i=0;i<blocks.length;i++){const b=blocks[i],type=b.dataset.type;const {data:q,error:qe}=await db.from('exam_questions').insert({exam_id:exam.id,question_text:b.querySelector('.qtext').value.trim(),question_type:type,points:Number(b.querySelector('.points').value),position:i+1}).select().single();if(qe){status('save-status','تم إنشاء الامتحان، لكن حدث خطأ عند حفظ سؤال: '+qe.message+'؛ احذف المسودة أو أكملها.');btn.disabled=false;return;}if(type==='mcq'){const vals=[...b.querySelectorAll('.opt')].map(x=>x.value.trim());const {data:opts,error:oe}=await db.from('exam_options').insert(vals.map((option_text,j)=>({question_id:q.id,option_text,position:j+1}))).select();if(oe){status('save-status','خطأ في حفظ الاختيارات: '+oe.message);btn.disabled=false;return;}const correct=Number(b.querySelector('input[type=radio]:checked').value);const {error:ke}=await db.from('exam_answer_keys').insert({question_id:q.id,correct_option_id:opts[correct].id});if(ke){status('save-status','خطأ في حفظ مفتاح الإجابة: '+ke.message);btn.disabled=false;return;}}}status('save-status','تم حفظ الامتحان وأسئلته بنجاح.');$('exam-form').reset();$('questions').innerHTML='';await loadAdminExams();btn.disabled=false;}
 async function loadAdminExams(){const {data,error}=await db.from('exams').select('id,title,is_published,created_at').order('created_at',{ascending:false});if(error){$('exam-list').textContent='تعذر تحميل القائمة: '+error.message;return;}$('exam-list').innerHTML=(data||[]).map(x=>`<div class="item"><span><strong>${x.title}</strong><br><small>${x.is_published?'منشور':'مسودة'}</small></span><span><button class="secondary" data-toggle="${x.id}" data-pub="${!x.is_published}">${x.is_published?'إلغاء النشر':'نشر'}</button> <button class="danger" data-del="${x.id}">حذف</button></span></div>`).join('')||'لا توجد امتحانات بعد.';$('exam-list').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const {error}=await db.from('exams').update({is_published:b.dataset.pub==='true'}).eq('id',b.dataset.toggle);if(error)alert(error.message);else loadAdminExams()});$('exam-list').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('حذف الامتحان وجميع أسئلته؟'))return;const {error}=await db.from('exams').delete().eq('id',b.dataset.del);if(error)alert(error.message);else loadAdminExams()});const sel=$('results-exam');const old=sel.value;sel.innerHTML='<option value="">اختر امتحاناً</option>'+(data||[]).map(x=>`<option value="${x.id}">${x.title}</option>`).join('');if(old)sel.value=old;}
-async function loadResults(examId){if(!examId){$('results-list').textContent='اختر امتحاناً لعرض المحاولات.';return;}const {data,error}=await db.from('exam_attempts').select('id,student_id,started_at,submitted_at,objective_score,max_objective_points,manual_score,pending_points,student_profiles(registration_number),exam_answers(id,written_answer,selected_option_id,manual_score,graded_at,exam_options(option_text),exam_questions(question_text,points,question_type))').eq('exam_id',examId).order('started_at',{ascending:false});if(error){$('results-list').textContent='تعذر تحميل الإجابات: '+error.message;return;}if(!data?.length){$('results-list').textContent='لا توجد محاولات لهذا الامتحان بعد.';return;}$('results-list').innerHTML=data.map(a=>`<article class="question-editor"><strong>رقم التسجيل: ${a.student_profiles?.registration_number||"غير مربوط — راجع student_profiles"}</strong><p>النتيجة الآلية: ${a.objective_score}/${a.max_objective_points} — الكتابية: ${a.manual_score||0} — المتبقي للتصحيح: ${a.pending_points}</p><small>${a.submitted_at?'تم التسليم':'لم يرسل بعد'}</small>${(a.exam_answers||[]).filter(x=>x.written_answer!==null).map(ans=>`<div class="question-editor"><strong>${ans.exam_questions?.question_text||'سؤال كتابي'} (${ans.exam_questions?.points||0} نقطة)</strong><p>${String(ans.written_answer||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</p><label>العلامة الممنوحة<input type="number" min="0" max="${ans.exam_questions?.points||0}" step="0.25" value="${ans.manual_score??''}" id="grade_${ans.id}"></label><button type="button" data-grade="${ans.id}">حفظ التصحيح</button></div>`).join('')}</article>`).join('');$('results-list').querySelectorAll('[data-grade]').forEach(b=>b.onclick=async()=>{const score=Number($('grade_'+b.dataset.grade).value);const {error}=await db.rpc('grade_written_answer',{p_answer_id:b.dataset.grade,p_score:score});if(error)alert('تعذر حفظ التصحيح: '+error.message);else{alert('تم حفظ العلامة.');loadResults(examId);}});}
+
+async function loadResults(examId){
+  if(!examId){
+    $('results-list').textContent='اختر امتحاناً لعرض المحاولات.';
+    return;
+  }
+
+  $('results-list').textContent='جارٍ تحميل النتائج...';
+
+  const {data,error}=await db.from('exam_attempts').select(`
+    id,student_id,started_at,submitted_at,
+    objective_score,max_objective_points,
+    manual_score,pending_points,
+    student_profiles!exam_attempts_student_profile_fkey(
+      registration_number,first_name,last_name
+    ),
+    exam_answers(
+      id,written_answer,selected_option_id,
+      manual_score,graded_at,
+      exam_options(option_text),
+      exam_questions(question_text,points,question_type)
+    )
+  `).eq('exam_id',examId)
+   .order('started_at',{ascending:false});
+
+  if(error){
+    $('results-list').textContent='تعذر تحميل النتائج: '+error.message;
+    return;
+  }
+
+  if(!data?.length){
+    $('results-list').textContent='لا توجد محاولات لهذا الامتحان بعد.';
+    return;
+  }
+
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;',
+    '"':'&quot;',"'":'&#39;'
+  }[c]));
+
+  let html=`
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:850px;text-align:center">
+        <thead>
+          <tr style="background:#eaf1ff">
+            <th style="padding:12px">الطالب</th>
+            <th style="padding:12px">رقم التسجيل</th>
+            <th style="padding:12px">النتيجة الآلية</th>
+            <th style="padding:12px">العلامة الكتابية</th>
+            <th style="padding:12px">المتبقي للتصحيح</th>
+            <th style="padding:12px">الحالة</th>
+            <th style="padding:12px">الإجابات والتصحيح</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  for(const a of data){
+    const student=a.student_profiles;
+    const fullName=student
+      ? `${student.last_name||''} ${student.first_name||''}`.trim()
+      : 'طالب غير معروف';
+
+    const answers=(a.exam_answers||[])
+      .filter(x=>x.written_answer!==null);
+
+    const answerHtml=answers.map(ans=>`
+      <div class="question-editor" style="text-align:right">
+        <strong>${esc(ans.exam_questions?.question_text||'سؤال كتابي')}
+          (${ans.exam_questions?.points||0} نقطة)</strong>
+        <p>${esc(ans.written_answer||'')}</p>
+        <label>العلامة الممنوحة
+          <input type="number"
+            min="0"
+            max="${Number(ans.exam_questions?.points)||0}"
+            step="0.25"
+            value="${ans.manual_score??''}"
+            id="grade_${ans.id}">
+        </label>
+        <button type="button" data-grade="${ans.id}">
+          حفظ التصحيح
+        </button>
+      </div>
+    `).join('');
+
+    html+=`
+      <tr style="border-bottom:1px solid #e3eaf5">
+        <td style="padding:12px"><strong>${esc(fullName)}</strong></td>
+        <td style="padding:12px">${esc(student?.registration_number||'غير مربوط')}</td>
+        <td style="padding:12px">${a.objective_score??0}/${a.max_objective_points??0}</td>
+        <td style="padding:12px">${a.manual_score??0}</td>
+        <td style="padding:12px">${a.pending_points??0}</td>
+        <td style="padding:12px">${a.submitted_at?'تم التسليم':'لم يرسل بعد'}</td>
+        <td style="padding:12px;text-align:right">
+          ${answerHtml||'لا توجد إجابات كتابية'}
+        </td>
+      </tr>
+    `;
+  }
+
+  html+=`
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  $('results-list').innerHTML=html;
+
+  $('results-list').querySelectorAll('[data-grade]').forEach(b=>{
+    b.onclick=async()=>{
+      const score=Number($('grade_'+b.dataset.grade).value);
+
+      const {error}=await db.rpc('grade_written_answer',{
+        p_answer_id:b.dataset.grade,
+        p_score:score
+      });
+
+      if(error){
+        alert('تعذر حفظ التصحيح: '+error.message);
+      }else{
+        alert('تم حفظ العلامة بنجاح.');
+        await loadResults(examId);
+      }
+    };
+  });
+}
+
 
 async function createStudent(e){
   e.preventDefault();
