@@ -262,6 +262,221 @@ async function createStudent(e){
     btn.disabled=false;
   }
 }
-$('student-form').addEventListener('submit',createStudent);
+async function importStudentsExcel() {
+  const fileInput = $('students-excel');
+  const statusBox = $('excel-status');
+  const reportBox = $('excel-report');
+  const btn = $('import-students');
+
+  reportBox.innerHTML = '';
+
+  if (!await teacher()) {
+    status('excel-status', 'انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  if (!file) {
+    status('excel-status', 'يرجى اختيار ملف Excel أولاً.');
+    return;
+  }
+
+  if (typeof XLSX === 'undefined') {
+    status('excel-status', 'تعذر تحميل مكتبة قراءة Excel. تحقق من الاتصال بالإنترنت.');
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    status('excel-status', 'جارٍ قراءة ملف Excel...');
+
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    const rows = XLSX.utils.sheet_to_json(sheet, {
+      defval: '',
+      raw: false
+    });
+
+    if (!rows.length) {
+      status('excel-status', 'الملف فارغ أو لا يحتوي على بيانات.');
+      return;
+    }
+
+    // توحيد أسماء الأعمدة لتسهيل قراءتها
+    function normalizeHeader(value) {
+      return String(value || '')
+        .trim()
+        .replace(/\s+/g, '')
+        .replace(/[أإآ]/g, 'ا');
+    }
+
+    const headers = Object.keys(rows[0]);
+    const columns = {};
+
+    for (const h of headers) {
+      const key = normalizeHeader(h);
+
+      if (key === 'الاسم') columns.firstName = h;
+      if (key === 'اللقب') columns.lastName = h;
+      if (key === 'رقمالتسجيل') columns.registration = h;
+      if (key === 'كلمةالسر') columns.password = h;
+    }
+
+    if (
+      !columns.firstName ||
+      !columns.lastName ||
+      !columns.registration ||
+      !columns.password
+    ) {
+      status(
+        'excel-status',
+        'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.'
+      );
+      return;
+    }
+
+    const seen = new Set();
+    const errors = [];
+    let success = 0;
+
+    status(
+      'excel-status',
+      'تمت قراءة ' + rows.length + ' صفاً. جارٍ إنشاء الحسابات...'
+    );
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      const firstName = String(row[columns.firstName] ?? '').trim();
+      const lastName = String(row[columns.lastName] ?? '').trim();
+
+      const registrationNumber = String(
+        row[columns.registration] ?? ''
+      ).trim().replace(/\.0$/, '');
+
+      const password = String(row[columns.password] ?? '').trim();
+
+      const excelRow = i + 2;
+
+      if (!firstName || !lastName) {
+        errors.push('السطر ' + excelRow + ': الاسم أو اللقب فارغ.');
+        continue;
+      }
+
+      if (!/^[0-9]{8}$/.test(registrationNumber)) {
+        errors.push('السطر ' + excelRow + ': رقم التسجيل يجب أن يتكون من 8 أرقام.');
+        continue;
+      }
+
+      if (password.length < 8) {
+        errors.push('السطر ' + excelRow + ': كلمة السر أقل من 8 أحرف.');
+        continue;
+      }
+
+      if (seen.has(registrationNumber)) {
+        errors.push('السطر ' + excelRow + ': رقم التسجيل مكرر داخل الملف.');
+        continue;
+      }
+
+      seen.add(registrationNumber);
+
+      try {
+        const { data, error } = await db.functions.invoke(
+          'create-student',
+          {
+            body: {
+              first_name: firstName,
+              last_name: lastName,
+              registration_number: registrationNumber,
+              password: password
+            }
+          }
+        );
+
+        if (error) {
+          errors.push(
+            'السطر ' + excelRow + ' (' + registrationNumber +
+            '): ' + error.message
+          );
+          continue;
+        }
+
+        if (data?.error) {
+          errors.push(
+            'السطر ' + excelRow + ' (' + registrationNumber +
+            '): ' + data.error
+          );
+          continue;
+        }
+
+        success++;
+
+      } catch (err) {
+        errors.push(
+          'السطر ' + excelRow + ': ' + (err.message || 'خطأ غير معروف')
+        );
+      }
+
+      status(
+        'excel-status',
+        'تقدم الاستيراد: ' + (i + 1) + ' من ' + rows.length +
+        ' — تم إنشاء ' + success + ' حساباً.'
+      );
+    }
+
+    let report = `
+      <div class="status">
+        <strong>انتهى الاستيراد</strong><br>
+        عدد الصفوف: ${rows.length}<br>
+        الحسابات المنشأة بنجاح: ${success}<br>
+        الصفوف التي تعذر استيرادها: ${errors.length}
+      </div>
+    `;
+
+    if (errors.length) {
+      report += `
+        <div class="question-editor">
+          <strong>تفاصيل الأخطاء:</strong>
+          <ul>
+            ${errors.map(e => `<li>${escapeExcelText(e)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    reportBox.innerHTML = report;
+
+    status(
+      'excel-status',
+      'اكتمل الاستيراد. الحسابات المنشأة: ' + success +
+      '، الأخطاء: ' + errors.length
+    );
+
+    if (success > 0) {
+      fileInput.value = '';
+    }
+
+  } catch (err) {
+    status('excel-status', 'تعذر قراءة الملف: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeExcelText(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+$('import-students').addEventListener('click', importStudentsExcel);
+  $('student-form').addEventListener('submit',createStudent);
 $('results-exam').addEventListener('change',e=>loadResults(e.target.value));$('login-form').addEventListener('submit',login);$('add-mcq').onclick=()=>addQuestion('mcq');$('add-written').onclick=()=>addQuestion('written');$('exam-form').addEventListener('submit',saveExam);$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};(async()=>{const {data:{session}}=await db.auth.getSession();if(session&&await teacher()){$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}})();
 </script></body></html>
