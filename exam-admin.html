@@ -288,9 +288,35 @@ async function loadResults(examId) {
                     العلامة الحالية: ${Number(ans.manual_score || 0)}
                     / ${Number(q?.points || 0)}
                   </p>
-                  <small>
-                    ${ans.graded_at ? 'تم التصحيح' : 'بانتظار التصحيح'}
-                  </small>
+                  
+<div style="margin-top:12px">
+  <label>العلامة الممنوحة:</label>
+
+  <input
+    type="number"
+    class="manual-score-input"
+    id="score-${ans.id}"
+    min="0"
+    max="${Number(q?.points || 0)}"
+    step="0.25"
+    value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
+    placeholder="من ${Number(q?.points || 0)}"
+    style="width:100%;padding:10px"
+  >
+
+  <button
+    type="button"
+    class="secondary"
+    onclick="saveManualGrade('${ans.id}')"
+  >
+    حفظ التصحيح
+  </button>
+
+  <small>
+    ${ans.graded_at ? 'تم التصحيح' : 'بانتظار التصحيح'}
+  </small>
+</div>
+
                 </div>
               `;
             }).join('')
