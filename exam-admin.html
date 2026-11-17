@@ -425,19 +425,17 @@ const filteredData = (data || []).filter(a =>
   Number(a.pending_points || 0) <= 0 &&
   a.student_profiles
 );
-    );
 
-    const incompleteCount = data.length - completed.length;
+const incompleteCount = data.length - completed.length;
 
-    if (!completed.length) {
-      status(
-        'export-status',
-        'لا توجد نتائج مكتملة التصحيح بعد. المحاولات المسلّمة: ' +
-        data.length
-      );
-      return;
-    }
-
+if (!completed.length) {
+  status(
+    'export-status',
+    'لا توجد نتائج مكتملة التصحيح بعد. المحاولات المسلّمة: ' +
+    data.length
+  );
+  return;
+}
     const rows = completed.map(a => {
       const student = a.student_profiles;
 
