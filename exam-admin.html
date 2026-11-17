@@ -300,23 +300,21 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
   const btn=$('create-student');
   btn.disabled=true;
   status('student-status','جارٍ إنشاء الحساب...');
-
-  try {
-    const {data,error}=await db.functions.invoke('create-student',{
-      body:{
-          registration_number:registrationNumber,
-          password:password,
-          first_name:firstName,
-          last_name:lastName,
-          group_number:groupNumber
-        }
-      }
-    });
-
-    if(error){
-      status('student-status','تعذر إنشاء الحساب: '+error.message);
-      return;
+try {
+  const { data, error } = await db.functions.invoke('create-student', {
+    body: {
+      registration_number: registrationNumber,
+      password: password,
+      first_name: firstName,
+      last_name: lastName,
+      group_number: groupNumber
     }
+  });
+
+  if (error) {
+    status('student-status', 'تعذر إنشاء الحساب: ' + error.message);
+    return;
+  }
 
     if(data?.error){
       status('student-status','تعذر إنشاء الحساب: '+data.error);
