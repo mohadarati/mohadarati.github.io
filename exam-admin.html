@@ -35,7 +35,56 @@
     سلّم كلمة المرور للطالب بطريقة آمنة.
   </p>
 </div>
+
 <div class="panel">
+  <h2>تغيير كلمة مرور طالب</h2>
+  <p>أدخل رقم تسجيل الطالب وكلمة المرور الجديدة.</p>
+
+  <form id="reset-password-form">
+    <label>رقم التسجيل الجامعي
+      <input
+        id="reset-student-number"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]{8}"
+        minlength="8"
+        maxlength="8"
+        placeholder="37185601"
+        required
+      >
+    </label>
+
+    <label>كلمة المرور الجديدة
+      <input
+        id="reset-new-password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+    </label>
+
+    <label>تأكيد كلمة المرور الجديدة
+      <input
+        id="reset-confirm-password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+    </label>
+
+    <button id="reset-password-button" type="submit">
+      تغيير كلمة المرور
+    </button>
+  </form>
+
+  <div id="reset-password-status"
+       class="status hidden"
+       role="status"></div>
+</div>
+
+  <div class="panel">
   <h2>استيراد الطلبة من ملف Excel</h2>
 
   <p>
