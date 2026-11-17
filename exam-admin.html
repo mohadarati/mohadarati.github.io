@@ -807,14 +807,13 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
     }
 
     let report = `
-      <div class="status">
-        <strong>انتهى الاستيراد</strong><br>
-        عدد الصفوف: ${rows.length}<br>
-        الحسابات المنشأة بنجاح: ${success}<br>
-        الصفوف التي تعذر استيرادها: ${errors.length}
-      </div>
-    `;
-
+  <div class="status">
+    <strong>انتهى الاستيراد</strong><br>
+    عدد الصفوف: ${rows.length}<br>
+    الحسابات المنشأة بنجاح: ${success}<br>
+    الصفوف التي تعذر استيرادها: ${errors.length}
+  </div>
+`;
     if (errors.length) {
       report += `
         <div class="question-editor">
