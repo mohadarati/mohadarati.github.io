@@ -405,7 +405,8 @@ async function exportResultsExcel() {
       .order('started_at', { ascending: true });
 
     if (error) {
-      status('export-status', 'تعذر تحميل النتائج: ' + error.message);
+      console.error('Supabase Export Error:', error);
+status('export-status', 'خطأ قاعدة البيانات: ' + error.message);
       return;
     }
 
