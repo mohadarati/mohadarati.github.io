@@ -542,12 +542,12 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
           'create-student',
           {
             body: {
-              first_name: firstName,
-               last_name: lastName,
-              group_number: Number($('import-group').value)
-              registration_number: registrationNumber,
-              password: password
-            }
+  first_name: firstName,
+  last_name: lastName,
+  group_number: groupNumber,
+  registration_number: registrationNumber,
+  password: password
+}
           }
         );
 
