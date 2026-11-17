@@ -276,7 +276,12 @@ async function createStudent(e){
   const lastName=$('new-student-last-name').value.trim();
   const firstName=$('new-student-first-name').value.trim();
   const password=$('new-student-password').value;
+const groupNumber = Number($('new-student-group').value);
 
+if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
+  status('student-status', 'يرجى اختيار فوج الطالب.');
+  return;
+}
   if(!/^[0-9]{8}$/.test(registrationNumber)){
     status('student-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');
     return;
