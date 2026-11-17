@@ -387,20 +387,20 @@ async function exportResultsExcel() {
     status('export-status', 'جارٍ تجهيز ملف النتائج...');
 
     const { data, error } = await db
-      .from('exam_attempts')
-      .select(`
-        submitted_at,
-        objective_score,
-        manual_score,
-        pending_points,
-        student_profiles!exam_attempts_student_profile_fkey(
-  registration_number,
-  first_name,
-  last_name,
-  group_number
-)
-        )
-      .eq('exam_id', examId)
+  .from('exam_attempts')
+  .select(`
+    submitted_at,
+    objective_score,
+    manual_score,
+    pending_points,
+    student_profiles!exam_attempts_student_profile_fkey(
+      registration_number,
+      first_name,
+      last_name,
+      group_number
+    )
+  `)
+  .eq('exam_id', examId)
       .not('submitted_at', 'is', null)
       .order('started_at', { ascending: true });
 
