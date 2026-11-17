@@ -421,8 +421,10 @@ const filteredData = (data || []).filter(a =>
   (selectedGroup === 'all' ||
    String(a.student_profiles.group_number) === selectedGroup)
 );
-    const completed = data.filter(a =>
-      Number(a.pending_points || 0) <= 0 && a.student_profiles
+    const completed = filteredData.filter(a =>
+  Number(a.pending_points || 0) <= 0 &&
+  a.student_profiles
+);
     );
 
     const incompleteCount = data.length - completed.length;
