@@ -58,7 +58,15 @@
   <div id="excel-status" class="status hidden" role="status"></div>
   <div id="excel-report"></div>
 </div>  
-<div class="panel"><h2>الامتحانات المنشأة</h2><div id="exam-list">جارٍ التحميل…</div></div><div class="panel"><h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2><label>اختر الامتحان<select id="results-exam"><option value="">اختر امتحاناً</option></select></label><div id="results-list">اختر امتحاناً لعرض المحاولات.</div></div></section></main>
+<div class="panel"><h2>الامتحانات المنشأة</h2><div id="exam-list">جارٍ التحميل…</div></div><div class="panel"><h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2><label>اختر الامتحان
+  <select id="results-exam">
+    <option value="">اختر امتحاناً</option>
+  </select>
+</label>
+<button type="button" id="export-results" class="secondary">
+  تحميل النتائج Excel
+</button>
+<div id="export-status" class="status hidden"></div><div id="results-list">اختر امتحاناً لعرض المحاولات.</div></div></section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script>
 const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co',SUPABASE_KEY='sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b',db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let qcount=0;
