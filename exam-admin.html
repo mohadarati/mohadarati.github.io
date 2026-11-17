@@ -442,12 +442,12 @@ const filteredData = (data || []).filter(a =>
       const student = a.student_profiles;
 
       return {
-        'اللقب': student.last_name || '',
-        'الاسم': student.first_name || '',
-        'رقم التسجيل': student.registration_number || '',
-        'العلامة': Number(a.objective_score || 0) +
-                   Number(a.manual_score || 0)
-      };
+  اللقب: s.last_name,
+  الاسم: s.first_name,
+  'رقم التسجيل': s.registration_number,
+  الفوج: s.group_number || 'غير محدد',
+  العلامة: Number(a.objective_score || 0) + Number(a.manual_score || 0)
+}
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows, {
