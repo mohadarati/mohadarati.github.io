@@ -585,7 +585,8 @@ async function resetStudentPassword(e) {
           {
             body: {
               first_name: firstName,
-              last_name: lastName,
+               last_name: lastName,
+              group_number: Number($('import-group').value)
               registration_number: registrationNumber,
               password: password
             }
