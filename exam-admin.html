@@ -327,6 +327,41 @@ async function loadResults(examId) {
   }).join('');
 }
 
+async function saveManualGrade(answerId) {
+  if (!await teacher()) {
+    alert('انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+
+  const input = $('score-' + answerId);
+  const score = Number(input.value);
+
+  if (input.value.trim() === '' || !Number.isFinite(score) || score < 0) {
+    alert('يرجى إدخال علامة صحيحة.');
+    return;
+  }
+
+  const btn = input.parentElement.querySelector('button');
+  btn.disabled = true;
+
+  const { data, error } = await db.rpc('grade_exam_answer', {
+    p_answer_id: answerId,
+    p_score: score
+  });
+
+  btn.disabled = false;
+
+  if (error) {
+    alert('تعذر حفظ التصحيح: ' + error.message);
+    return;
+  }
+
+  alert('تم حفظ التصحيح بنجاح.');
+
+  const examId = $('results-exam').value;
+  if (examId) await loadResults(examId);
+}
+
 async function exportResultsExcel() {
   const examId = $('results-exam').value;
 
