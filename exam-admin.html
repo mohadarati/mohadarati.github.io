@@ -400,7 +400,6 @@ async function exportResultsExcel() {
   group_number
 )
         )
-      `)
       .eq('exam_id', examId)
       .not('submitted_at', 'is', null)
       .order('started_at', { ascending: true });
