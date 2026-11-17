@@ -815,13 +815,16 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
   </div>
 `;
     if (errors.length) {
-      report += `
-        <div class="question-editor">
-          <strong>تفاصيل الأخطاء:</strong>
-          <ul>
-            ${errors.map(e => `<li>${escapeExcelText(e)}</li>`).join('')}
-          </ul>
-        </div>
+  const errorItems = errors
+    .map(e => '<li>' + escapeExcelText(e) + '</li>')
+    .join('');
+
+  report +=
+    '<div class="question-editor">' +
+      '<strong>تفاصيل الأخطاء:</strong>' +
+      '<ul>' + errorItems + '</ul>' +
+    '</div>';
+}
       `;
     }
 
