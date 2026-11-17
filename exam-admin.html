@@ -414,7 +414,13 @@ async function exportResultsExcel() {
       status('export-status', 'لا توجد محاولات مسلّمة لهذا الامتحان.');
       return;
     }
+const selectedGroup = $('results-group').value;
 
+const filteredData = (data || []).filter(a =>
+  a.student_profiles &&
+  (selectedGroup === 'all' ||
+   String(a.student_profiles.group_number) === selectedGroup)
+);
     const completed = data.filter(a =>
       Number(a.pending_points || 0) <= 0 && a.student_profiles
     );
