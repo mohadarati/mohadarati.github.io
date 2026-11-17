@@ -483,10 +483,15 @@ if (!completed.length) {
     );
 
   } catch (err) {
-    status('export-status', 'حدث خطأ أثناء التصدير: ' + err.message);
-  } finally {
-    btn.disabled = false;
-  }
+  console.error('Excel Export Error:', err);
+  status(
+    'export-status',
+    'حدث خطأ أثناء التصدير: ' +
+    (err.message || String(err))
+  );
+} finally {
+  btn.disabled = false;
+}
 }
 
 async function createStudent(e){
