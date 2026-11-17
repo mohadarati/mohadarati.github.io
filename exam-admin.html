@@ -304,10 +304,12 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
   try {
     const {data,error}=await db.functions.invoke('create-student',{
       body:{
-        registration_number:registrationNumber,
-        password:password,
-        first_name:firstName,
-        last_name:lastName
+          registration_number:registrationNumber,
+          password:password,
+          first_name:firstName,
+          last_name:lastName,
+          group_number:groupNumber
+        }
       }
     });
 
