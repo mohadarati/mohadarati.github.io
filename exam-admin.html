@@ -765,18 +765,15 @@ if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
       seen.add(registrationNumber);
 
       try {
-        const { data, error } = await db.functions.invoke(
-          'create-student',
-          {
-            body: {
-  first_name: firstName,
-  last_name: lastName,
-  group_number: groupNumber,
-  registration_number: registrationNumber,
-  password: password
-}
-          }
-        );
+        const { data, error } = await db.functions.invoke('create-student', {
+  body: {
+    first_name: firstName,
+    last_name: lastName,
+    group_number: groupNumber,
+    registration_number: registrationNumber,
+    password: password
+  }
+});
 
         if (error) {
           errors.push(
