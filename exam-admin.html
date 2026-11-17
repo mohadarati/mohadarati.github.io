@@ -422,7 +422,12 @@ async function resetStudentPassword(e) {
     status('excel-status', 'انتهت الجلسة أو لا تملك الصلاحية.');
     return;
   }
+const groupNumber = Number($('import-group').value);
 
+if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
+  status('excel-status', 'يرجى اختيار فوج الطلبة قبل الاستيراد.');
+  return;
+}
   const file = fileInput.files[0];
 
   if (!file) {
