@@ -451,7 +451,7 @@ const filteredData = (data || []).filter(a =>
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows, {
-      header: ['اللقب', 'الاسم', 'رقم التسجيل', 'العلامة']
+      header: ['اللقب', 'الاسم', 'الفوج', 'رقم التسجيل', 'العلامة']
     });
 
     worksheet['!cols'] = [
