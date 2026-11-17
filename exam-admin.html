@@ -600,6 +600,10 @@ function escapeExcelText(value) {
 }
 $('import-students').addEventListener('click', importStudentsExcel);
   $('student-form').addEventListener('submit',createStudent);
-$('results-exam').addEventListener('change',e=>loadResults(e.target.value));$('export-results').addEventListener('click', exportResultsExcel);$('login-form').addEventListener('submit',login);$('add-mcq').onclick=()=>addQuestion('mcq');$('add-written').onclick=()=>addQuestion('written');$('exam-form').addEventListener('submit',saveExam);$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};(async()=>{const {data:{session}}=await db.auth.getSession();if(session&&await teacher()){$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}})();
+$('reset-password-form').addEventListener(
+  'submit',
+  resetStudentPassword
+);
+  $('results-exam').addEventListener('change',e=>loadResults(e.target.value));$('export-results').addEventListener('click', exportResultsExcel);$('login-form').addEventListener('submit',login);$('add-mcq').onclick=()=>addQuestion('mcq');$('add-written').onclick=()=>addQuestion('written');$('exam-form').addEventListener('submit',saveExam);$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};(async()=>{const {data:{session}}=await db.auth.getSession();if(session&&await teacher()){$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}})();
 </script></body></html>
 
