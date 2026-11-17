@@ -35,26 +35,6 @@
     سلّم كلمة المرور للطالب بطريقة آمنة.
   </p>
 </div>
-
-<div class="panel">
-  <h2>إعادة تعيين كلمة مرور طالب</h2>
-  <p>أدخل رقم تسجيل الطالب وكلمة المرور الجديدة. لن تتغير بيانات الطالب أو رقم تسجيله.</p>
-  <form id="reset-student-password-form">
-    <label>رقم التسجيل الجامعي
-      <input id="reset-student-number" inputmode="numeric"
-        pattern="[0-9]{8}" minlength="8" maxlength="8"
-        placeholder="أدخل رقم التسجيل المكوّن من 8 أرقام" required>
-    </label>
-    <label>كلمة المرور الجديدة
-      <input id="reset-student-new-password" type="password"
-        minlength="8" autocomplete="new-password"
-        placeholder="8 أحرف على الأقل" required>
-    </label>
-    <button id="reset-student-password-button" type="submit">تغيير كلمة المرور</button>
-  </form>
-  <div id="reset-student-password-status" class="status hidden" role="status"></div>
-</div>
-
 <div class="panel">
   <h2>استيراد الطلبة من ملف Excel</h2>
 
@@ -282,70 +262,6 @@ async function createStudent(e){
     btn.disabled=false;
   }
 }
-async function resetStudentPassword(e) {
-  e.preventDefault();
-
-  const statusId = 'reset-student-password-status';
-  const btn = $('reset-student-password-button');
-
-  if (!await teacher()) {
-    status(statusId, 'انتهت الجلسة أو لا تملك الصلاحية.');
-    return;
-  }
-
-  const registrationNumber = $('reset-student-number').value.trim();
-  const newPassword = $('reset-student-new-password').value;
-
-  if (!/^[0-9]{8}$/.test(registrationNumber)) {
-    status(statusId, 'رقم التسجيل يجب أن يتكون من 8 أرقام.');
-    return;
-  }
-
-  if (newPassword.length < 8) {
-    status(statusId, 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف.');
-    return;
-  }
-
-  if (!confirm('هل تريد تعيين كلمة مرور جديدة لهذا الطالب؟')) {
-    return;
-  }
-
-  btn.disabled = true;
-  status(statusId, 'جارٍ تغيير كلمة المرور...');
-
-  try {
-    const { data, error } = await db.functions.invoke(
-      'reset-student-password',
-      {
-        body: {
-          registration_number: registrationNumber,
-          new_password: newPassword
-        }
-      }
-    );
-
-    if (error) {
-      status(statusId, 'تعذر تغيير كلمة المرور: ' + error.message);
-      return;
-    }
-
-    if (data?.error) {
-      status(statusId, 'تعذر تغيير كلمة المرور: ' + data.error);
-      return;
-    }
-
-    $('reset-student-password-form').reset();
-    status(
-      statusId,
-      data?.message || 'تم تغيير كلمة مرور الطالب بنجاح.'
-    );
-  } catch (err) {
-    status(statusId, 'حدث خطأ أثناء تغيير كلمة المرور: ' + err.message);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 async function importStudentsExcel() {
   const fileInput = $('students-excel');
   const statusBox = $('excel-status');
@@ -506,4 +422,62 @@ async function importStudentsExcel() {
       }
 
       status(
-        'excel-status'
+        'excel-status',
+        'تقدم الاستيراد: ' + (i + 1) + ' من ' + rows.length +
+        ' — تم إنشاء ' + success + ' حساباً.'
+      );
+    }
+
+    let report = `
+      <div class="status">
+        <strong>انتهى الاستيراد</strong><br>
+        عدد الصفوف: ${rows.length}<br>
+        الحسابات المنشأة بنجاح: ${success}<br>
+        الصفوف التي تعذر استيرادها: ${errors.length}
+      </div>
+    `;
+
+    if (errors.length) {
+      report += `
+        <div class="question-editor">
+          <strong>تفاصيل الأخطاء:</strong>
+          <ul>
+            ${errors.map(e => `<li>${escapeExcelText(e)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    reportBox.innerHTML = report;
+
+    status(
+      'excel-status',
+      'اكتمل الاستيراد. الحسابات المنشأة: ' + success +
+      '، الأخطاء: ' + errors.length
+    );
+
+    if (success > 0) {
+      fileInput.value = '';
+    }
+
+  } catch (err) {
+    status('excel-status', 'تعذر قراءة الملف: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeExcelText(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+$('import-students').addEventListener('click', importStudentsExcel);
+  $('student-form').addEventListener('submit',createStudent);
+$('results-exam').addEventListener('change',e=>loadResults(e.target.value));$('export-results').addEventListener('click', exportResultsExcel);$('login-form').addEventListener('submit',login);$('add-mcq').onclick=()=>addQuestion('mcq');$('add-written').onclick=()=>addQuestion('written');$('exam-form').addEventListener('submit',saveExam);$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};(async()=>{const {data:{session}}=await db.auth.getSession();if(session&&await teacher()){$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}})();
+</script></body></html>
+
