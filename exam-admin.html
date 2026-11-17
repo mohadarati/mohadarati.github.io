@@ -253,6 +253,79 @@ async function createStudent(e){
     return;
   }
 
+async function resetStudentPassword(e) {
+  e.preventDefault();
+
+  if (!await teacher()) {
+    status('reset-password-status',
+      'انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+
+  const registration = $('reset-student-number').value.trim();
+  const password = $('reset-new-password').value;
+  const confirmation = $('reset-confirm-password').value;
+
+  if (!/^[0-9]{8}$/.test(registration)) {
+    status('reset-password-status',
+      'رقم التسجيل يجب أن يتكون من 8 أرقام.');
+    return;
+  }
+
+  if (password.length < 8) {
+    status('reset-password-status',
+      'كلمة المرور يجب ألا تقل عن 8 أحرف.');
+    return;
+  }
+
+  if (password !== confirmation) {
+    status('reset-password-status',
+      'كلمتا المرور غير متطابقتين.');
+    return;
+  }
+
+  const btn = $('reset-password-button');
+  btn.disabled = true;
+
+  status('reset-password-status',
+    'جارٍ تغيير كلمة المرور...');
+
+  try {
+    const { data, error } = await db.functions.invoke(
+      'bright-responder',
+      {
+        body: {
+          registration_number: registration,
+          new_password: password
+        }
+      }
+    );
+
+    if (error) {
+      status('reset-password-status',
+        'تعذر تنفيذ العملية: ' + error.message);
+      return;
+    }
+
+    if (data?.error) {
+      status('reset-password-status', data.error);
+      return;
+    }
+
+    $('reset-password-form').reset();
+
+    status('reset-password-status',
+      'تم تغيير كلمة مرور الطالب بنجاح. رقم التسجيل: ' +
+      registration);
+
+  } catch (err) {
+    status('reset-password-status',
+      'حدث خطأ: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
   const registrationNumber=$('new-student-number').value.trim();
   const lastName=$('new-student-last-name').value.trim();
   const firstName=$('new-student-first-name').value.trim();
