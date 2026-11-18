@@ -134,6 +134,19 @@ async function submitAnswers(auto = false) {
 $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('login-btn').disabled=true;const registrationNumber=$('student-number').value.trim();
 if(!/^\d{8}$/.test(registrationNumber)){showStatus('auth-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');return;}
 const studentEmail=registrationNumber+'@students.mohadarati.dz';
-const {error}=await db.auth.signInWithPassword({email:studentEmail,password:$('student-password').value});$('login-btn').disabled=false;if(error){showStatus('auth-status','تعذر تسجيل الدخول: '+error.message);return;}showOnly('student-view');await loadExams();});$('logout-btn').addEventListener('click',async()=>{await db.auth.signOut();showOnly('auth-panel')});$('answer-form').addEventListener('submit',e=>{e.preventDefault();if(confirm('هل تريد إنهاء الامتحان وإرسال إجاباتك؟'))submitAnswers(false)});$('back-btn').addEventListener('click',async()=>{showOnly('student-view');await loadExams()});
+const {error}=await db.auth.signInWithPassword({email:studentEmail,password:$('student-password').value});$('login-btn').disabled=false;if(error){showStatus('auth-status','تعذر تسجيل الدخول: '+error.message);return;}showOnly('student-view');await loadExams();});$('logout-btn').addEventListener('click',async()=>{await db.auth.signOut();showOnly('auth-panel')});$('answer-form').addEventListener('submit', e => {
+    e.preventDefault();
+
+    if (isSubmitting || !currentAttempt) return;
+
+    if (examExpired) {
+        submitAnswers(true);
+        return;
+    }
+
+    if (confirm('هل تريد إنهاء الامتحان وإرسال إجاباتك؟')) {
+        submitAnswers(false);
+    }
+});$('back-btn').addEventListener('click',async()=>{showOnly('student-view');await loadExams()});
 (async()=>{const {data:{session}}=await db.auth.getSession();if(session){showOnly('student-view');await loadExams();}})();
 </script></body></html>
