@@ -57,7 +57,65 @@ function runTimer()function runTimer(){
   tick();
   timerHandle = setInterval(tick, 1000);
 }
-async function submitAnswers(auto=false){if(!currentAttempt)return;const btn=$('submit-btn');btn.disabled=true;const answers=[];$('question-list').querySelectorAll('.question').forEach(q=>{const control=q.querySelector('input[type=radio]:checked')||q.querySelector('textarea');if(!control)return;const questionId=control.name.slice(2);if(control.type==='radio')answers.push({question_id:questionId,selected_option_id:control.value});else answers.push({question_id:questionId,written_answer:control.value});});const {data,error}=await db.rpc('submit_exam',{p_attempt_id:currentAttempt,p_answers:answers});btn.disabled=false;if(error){alert('تعذر إرسال الإجابات: '+error.message);return;}clearInterval(timerHandle);$('result-content').innerHTML=`<p class="score">العلامة الآلية: ${data.objective_score} / ${data.max_objective_points}</p><p>العلامة الكتابية المصححة: ${data.manual_score||0}</p><p>علامات الأسئلة الكتابية التي تنتظر تصحيح الأستاذ: ${data.pending_points}</p><p class="note">هذه نتيجة أولية؛ ستضاف علامة الأسئلة الكتابية بعد تصحيح الأستاذ.</p>`;showOnly('result-view');currentAttempt=null;}
+async function submitAnswers(auto=false)
+async function submitAnswers(auto = false) {
+    if (!currentAttempt || isSubmitting) return;
+
+    isSubmitting = true;
+    const btn = $('submit-btn');
+    btn.disabled = true;
+
+    const answers = [];
+
+    $('question-list').querySelectorAll('.question').forEach(q => {
+        const control =
+            q.querySelector('input[type=radio]:checked') ||
+            q.querySelector('textarea');
+
+        if (!control) return;
+
+        const questionId = control.name.slice(2);
+
+        if (control.type === 'radio') {
+            answers.push({
+                question_id: questionId,
+                selected_option_id: control.value
+            });
+        } else {
+            answers.push({
+                question_id: questionId,
+                written_answer: control.value
+            });
+        }
+    });
+
+    const { data, error } = await db.rpc('submit_exam', {
+        p_attempt_id: currentAttempt,
+        p_answers: answers
+    });
+
+    if (error) {
+        isSubmitting = false;
+        btn.disabled = false;
+        alert('تعذر إرسال الإجابات: ' + error.message);
+        return;
+    }
+
+    clearInterval(timerHandle);
+
+    $('result-content').innerHTML = `
+        <p class="score">العلامة الآلية: ${data.objective_score} / ${data.max_objective_points}</p>
+        <p>العلامة الكتابية المصححة: ${data.manual_score || 0}</p>
+        <p>علامات الأسئلة الكتابية التي تنتظر تصحيح الأستاذ: ${data.pending_points}</p>
+        <p class="note">هذه نتيجة أولية؛ ستضاف علامة الأسئلة الكتابية بعد تصحيح الأستاذ.</p>
+        ${auto ? '<p class="note">تم تسليم الامتحان تلقائياً لانتهاء الوقت.</p>' : ''}
+    `;
+
+    showOnly('result-view');
+    currentAttempt = null;
+    isSubmitting = false;
+}
+
 $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('login-btn').disabled=true;const registrationNumber=$('student-number').value.trim();
 if(!/^\d{8}$/.test(registrationNumber)){showStatus('auth-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');return;}
 const studentEmail=registrationNumber+'@students.mohadarati.dz';
