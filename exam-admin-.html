@@ -1,0 +1,869 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة الامتحانات | محاضراتي</title><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;font-family:'Amiri',serif}body{margin:0;background:#f4f7fc;color:#172b4d}header{background:white;padding:15px max(5vw,20px);display:flex;justify-content:space-between;gap:12px;align-items:center;box-shadow:0 3px 18px #18376e14}a{color:#155eef;text-decoration:none;font-weight:bold}main{max-width:900px;margin:30px auto;padding:0 16px}.panel{background:white;border:1px solid #e3eaf5;border-radius:16px;padding:22px;margin-bottom:18px}h1,h2{color:#173b76}label{display:grid;gap:6px;margin:11px 0;font-weight:bold}input,textarea,select{width:100%;padding:11px;border:1px solid #dce5f2;border-radius:9px;font:inherit}textarea{min-height:80px}button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:white;font:inherit;font-weight:bold;cursor:pointer}.secondary{background:#eaf1ff;color:#155eef}.danger{background:#fdecec;color:#b42318}.question-editor{border:1px solid #dce5f2;border-radius:12px;padding:14px;margin:12px 0}.option-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.status{padding:11px;background:#eaf1ff;border-radius:9px;margin:10px 0}.hidden{display:none!important}.item{border:1px solid #e3eaf5;padding:12px;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}@media(max-width:600px){.panel{padding:15px}.item{align-items:flex-start;flex-direction:column}}</style></head><body><header><strong>محاضراتي — إدارة الامتحانات</strong><div><a href="./admin.html">لوحة الأستاذ</a> · <a href="./index.html">الموقع</a></div></header><main>
+<section id="login-panel" class="panel"><h1>دخول الأستاذ</h1><p>سجّل الدخول بحساب الأستاذ المعتمد في Supabase.</p><form id="login-form"><label>البريد الإلكتروني<input id="email" type="email" required></label><label>كلمة المرور<input id="password" type="password" required></label><button>تسجيل الدخول</button></form><div id="login-status" class="status hidden"></div></section>
+<section id="manager" class="hidden"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h1>إنشاء امتحان</h1><button class="secondary" id="logout">تسجيل الخروج</button></div><form id="exam-form"><label>عنوان الامتحان<input id="exam-title" required maxlength="200"></label><label>وصف الامتحان<textarea id="exam-desc"></textarea></label><label>مدة الامتحان بالدقائق<input id="duration" type="number" min="1" max="300" value="60" required></label><label>تاريخ بداية الإتاحة (اختياري)<input id="starts" type="datetime-local"></label><label>تاريخ نهاية الإتاحة (اختياري)<input id="ends" type="datetime-local"></label><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input id="published" type="checkbox" checked style="width:auto"> نشر الامتحان فور الحفظ</label><h2>أسئلة الامتحان</h2><div id="questions"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" id="add-mcq">إضافة سؤال اختيار من متعدد</button><button type="button" class="secondary" id="add-written">إضافة سؤال كتابي</button></div><p style="color:#7183a2;font-size:13px">في سؤال الاختيار من متعدد، أدخل الاختيارات وحدد الإجابة الصحيحة. السؤال الكتابي يصححه الأستاذ بعد الإرسال.</p><button id="save-exam" type="submit">حفظ الامتحان</button></form><div id="save-status" class="status hidden"></div></div>
+<div class="panel">
+  <h2>إدارة الطلبة</h2>
+  <p>أنشئ حساباً لكل طالب باستخدام رقم التسجيل واللقب والاسم وكلمة المرور.</p>
+
+  <form id="student-form">
+    <label>رقم التسجيل الجامعي (8 أرقام)
+      <input id="new-student-number" inputmode="numeric"
+        pattern="[0-9]{8}" minlength="8" maxlength="8"
+        placeholder="38290618" required>
+    </label>
+
+    <label>لقب الطالب
+      <input id="new-student-last-name" type="text"
+        placeholder="عواني" required>
+    </label>
+
+    <label>اسم الطالب
+      <input id="new-student-first-name" type="text"
+        placeholder="محمد" required>
+    </label>
+
+    <label>كلمة المرور الأولية
+      <input id="new-student-password" type="password"
+        minlength="8" autocomplete="new-password" required>
+    </label>
+<label>فوج الطالب
+  <select id="new-student-group" required>
+    <option value="">اختر الفوج</option>
+    <option value="1">الفوج 1</option>
+    <option value="2">الفوج 2</option>
+    <option value="3">الفوج 3</option>
+    <option value="4">الفوج 4</option>
+    <option value="5">الفوج 5</option>
+    <option value="6">الفوج 6</option>
+  </select>
+</label>
+    <button id="create-student" type="submit">إنشاء حساب الطالب</button>
+  </form>
+
+  <div id="student-status" class="status hidden" role="status"></div>
+  <p style="font-size:13px;color:#7183a2">
+    سلّم كلمة المرور للطالب بطريقة آمنة.
+  </p>
+</div>
+
+<div class="panel">
+  <h2>تغيير كلمة مرور طالب</h2>
+  <p>أدخل رقم تسجيل الطالب وكلمة المرور الجديدة.</p>
+
+  <form id="reset-password-form">
+    <label>رقم التسجيل الجامعي
+      <input
+        id="reset-student-number"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]{8}"
+        minlength="8"
+        maxlength="8"
+        placeholder="37185601"
+        required
+      >
+    </label>
+
+    <label>كلمة المرور الجديدة
+      <input
+        id="reset-new-password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+    </label>
+
+    <label>تأكيد كلمة المرور الجديدة
+      <input
+        id="reset-confirm-password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+    </label>
+
+    <button id="reset-password-button" type="submit">
+      تغيير كلمة المرور
+    </button>
+  </form>
+
+  <div id="reset-password-status"
+       class="status hidden"
+       role="status"></div>
+</div>
+
+  <div class="panel">
+  <h2>استيراد الطلبة من ملف Excel</h2>
+
+  <p>
+    اختر ملف Excel يحتوي على الأعمدة التالية:
+    الاسم، اللقب، رقم التسجيل، كلمة السر.
+  </p>
+
+  <label>ملف الطلبة Excel
+    <input
+      type="file"
+      id="students-excel"
+      accept=".xlsx,.xls,.csv"
+    >
+  </label>
+<label>اختر فوج الطلبة
+  <select id="import-group" required>
+    <option value="">اختر الفوج</option>
+    <option value="1">الفوج 1</option>
+    <option value="2">الفوج 2</option>
+    <option value="3">الفوج 3</option>
+    <option value="4">الفوج 4</option>
+    <option value="5">الفوج 5</option>
+    <option value="6">الفوج 6</option>
+  </select>
+</label>
+  <button type="button" id="import-students">
+    استيراد وإنشاء حسابات الطلبة
+  </button>
+
+  <div id="excel-status" class="status hidden" role="status"></div>
+  <div id="excel-report"></div>
+</div>  
+<div class="panel"><h2>الامتحانات المنشأة</h2><div id="exam-list">جارٍ التحميل…</div></div><div class="panel"><h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2><label>اختر الامتحان
+  <select id="results-exam">
+    <option value="">اختر امتحاناً</option>
+  </select>
+</label>
+  <label>تصفية النتائج حسب الفوج
+  <select id="results-group">
+    <option value="all">جميع الأفواج</option>
+    <option value="1">الفوج 1</option>
+    <option value="2">الفوج 2</option>
+    <option value="3">الفوج 3</option>
+    <option value="4">الفوج 4</option>
+    <option value="5">الفوج 5</option>
+    <option value="6">الفوج 6</option>
+  </select>
+</label>
+<button type="button" id="export-results" class="secondary">
+  تحميل النتائج Excel
+</button>
+<div id="export-status" class="status hidden"></div><div id="results-list">اختر امتحاناً لعرض المحاولات.</div></div></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script>
+const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co',SUPABASE_KEY='sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b',db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let qcount=0;
+function status(id,msg){$(id).textContent=msg;$(id).classList.remove('hidden')}
+async function teacher(){const {data,error}=await db.rpc('is_teacher');return !error&&data===true}
+async function login(e){e.preventDefault();const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){status('login-status','فشل الدخول: '+error.message);return;}if(!await teacher()){await db.auth.signOut();status('login-status','هذا الحساب ليس حساب أستاذ معتمداً.');return;}$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}$('login-form').addEventListener('submit', login);
+function addQuestion(type){qcount++;const id='qe'+qcount;const box=document.createElement('div');box.className='question-editor';box.dataset.type=type;box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><strong>${type==='mcq'?'سؤال اختيار من متعدد':'سؤال كتابي'}</strong><button type="button" class="danger remove">حذف السؤال</button></div><label>نص السؤال<textarea class="qtext" required></textarea></label><label>العلامة<input class="points" type="number" min="0.25" step="0.25" value="1" required></label>${type==='mcq'?`<div class="options">${[1,2,3,4].map(n=>`<label class="option-row"><input class="opt" placeholder="الاختيار ${n}" required><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="radio" name="correct_${id}" value="${n-1}" ${n===1?'checked':''} style="width:auto"> صحيحة</label></label>`).join('')}</div>`:'<p style="color:#7183a2">تظهر الإجابة للأستاذ للتصحيح اليدوي بعد تسليم الطالب.</p>'}`;box.querySelector('.remove').addEventListener('click',()=>box.remove());$('questions').appendChild(box);}
+async function saveExam(e){e.preventDefault();if(!await teacher()){status('save-status','انتهت الجلسة أو لا تملك الصلاحية.');return;}const blocks=[...$('questions').querySelectorAll('.question-editor')];if(!blocks.length){status('save-status','أضف سؤالاً واحداً على الأقل قبل الحفظ.');return;}const btn=$('save-exam');btn.disabled=true;const payload={title:$('exam-title').value.trim(),description:$('exam-desc').value.trim(),duration_minutes:Number($('duration').value),is_published:$('published').checked,starts_at:$('starts').value?new Date($('starts').value).toISOString():null,ends_at:$('ends').value?new Date($('ends').value).toISOString():null};const {data:exam,error}=await db.from('exams').insert(payload).select().single();if(error){status('save-status','تعذر إنشاء الامتحان: '+error.message);btn.disabled=false;return;}for(let i=0;i<blocks.length;i++){const b=blocks[i],type=b.dataset.type;const {data:q,error:qe}=await db.from('exam_questions').insert({exam_id:exam.id,question_text:b.querySelector('.qtext').value.trim(),question_type:type,points:Number(b.querySelector('.points').value),position:i+1}).select().single();if(qe){status('save-status','تم إنشاء الامتحان، لكن حدث خطأ عند حفظ سؤال: '+qe.message+'؛ احذف المسودة أو أكملها.');btn.disabled=false;return;}if(type==='mcq'){const vals=[...b.querySelectorAll('.opt')].map(x=>x.value.trim());const {data:opts,error:oe}=await db.from('exam_options').insert(vals.map((option_text,j)=>({question_id:q.id,option_text,position:j+1}))).select();if(oe){status('save-status','خطأ في حفظ الاختيارات: '+oe.message);btn.disabled=false;return;}const correct=Number(b.querySelector('input[type=radio]:checked').value);const {error:ke}=await db.from('exam_answer_keys').insert({question_id:q.id,correct_option_id:opts[correct].id});if(ke){status('save-status','خطأ في حفظ مفتاح الإجابة: '+ke.message);btn.disabled=false;return;}}}status('save-status','تم حفظ الامتحان وأسئلته بنجاح.');$('exam-form').reset();$('questions').innerHTML='';await loadAdminExams();btn.disabled=false;}
+async function loadAdminExams(){const {data,error}=await db.from('exams').select('id,title,is_published,created_at').order('created_at',{ascending:false});if(error){$('exam-list').textContent='تعذر تحميل القائمة: '+error.message;return;}$('exam-list').innerHTML=(data||[]).map(x=>`<div class="item"><span><strong>${x.title}</strong><br><small>${x.is_published?'منشور':'مسودة'}</small></span><span><button class="secondary" data-toggle="${x.id}" data-pub="${!x.is_published}">${x.is_published?'إلغاء النشر':'نشر'}</button> <button class="danger" data-del="${x.id}">حذف</button></span></div>`).join('')||'لا توجد امتحانات بعد.';$('exam-list').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const {error}=await db.from('exams').update({is_published:b.dataset.pub==='true'}).eq('id',b.dataset.toggle);if(error)alert(error.message);else loadAdminExams()});$('exam-list').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('حذف الامتحان وجميع أسئلته؟'))return;const {error}=await db.from('exams').delete().eq('id',b.dataset.del);if(error)alert(error.message);else loadAdminExams()});const sel=$('results-exam');const old=sel.value;sel.innerHTML='<option value="">اختر امتحاناً</option>'+(data||[]).map(x=>`<option value="${x.id}">${x.title}</option>`).join('');if(old)sel.value=old;}
+
+async function loadResults(examId) {
+  const box = $('results-list');
+  const group = $('results-group').value;
+
+  if (!examId) {
+    box.textContent = 'اختر امتحاناً لعرض النتائج.';
+    return;
+  }
+
+  if (!await teacher()) {
+    box.textContent = 'انتهت الجلسة أو لا تملك الصلاحية.';
+    return;
+  }
+
+  box.textContent = 'جارٍ تحميل النتائج...';
+
+  const { data: attempts, error } = await db
+    .from('exam_attempts')
+    .select(`
+      id,
+      submitted_at,
+      objective_score,
+      manual_score,
+      pending_points,
+      student_profiles!exam_attempts_student_profile_fkey(
+        registration_number,
+        first_name,
+        last_name,
+        group_number
+      )
+    `)
+    .eq('exam_id', examId)
+    .not('submitted_at', 'is', null)
+    .order('started_at', { ascending: true });
+
+  if (error) {
+    box.textContent = 'تعذر تحميل النتائج: ' + error.message;
+    return;
+  }
+
+  let filtered = (attempts || []).filter(a =>
+    a.student_profiles &&
+    (group === 'all' ||
+     String(a.student_profiles.group_number) === group)
+  );
+
+  if (!filtered.length) {
+    box.textContent = 'لا توجد نتائج مسلّمة في هذا الفوج.';
+    return;
+  }
+
+  const ids = filtered.map(a => a.id);
+
+  const { data: answers, error: answerError } = await db
+    .from('exam_answers')
+    .select('id,attempt_id,question_id,written_answer,manual_score,graded_at')
+    .in('attempt_id', ids)
+    .not('written_answer', 'is', null);
+
+  if (answerError) {
+    box.textContent = 'تعذر تحميل الإجابات: ' + answerError.message;
+    return;
+  }
+
+  const questionIds = [...new Set(
+    (answers || []).map(a => a.question_id)
+  )];
+
+  let questions = [];
+
+  if (questionIds.length) {
+    const result = await db
+      .from('exam_questions')
+      .select('id,question_text,points')
+      .in('id', questionIds);
+
+    if (result.error) {
+      box.textContent = 'تعذر تحميل الأسئلة: ' + result.error.message;
+      return;
+    }
+
+    questions = result.data || [];
+  }
+
+  const questionMap = new Map(questions.map(q => [q.id, q]));
+
+  const answersByAttempt = new Map();
+
+  (answers || []).forEach(a => {
+    if (!answersByAttempt.has(a.attempt_id)) {
+      answersByAttempt.set(a.attempt_id, []);
+    }
+    answersByAttempt.get(a.attempt_id).push(a);
+  });
+
+  box.innerHTML = filtered.map(a => {
+    const s = a.student_profiles;
+    const studentName =
+      (s.last_name || '') + ' ' + (s.first_name || '');
+
+    const written = answersByAttempt.get(a.id) || [];
+
+    return `
+      <article class="item" style="display:block;margin:12px 0;padding:16px">
+        <h3>${escapeExcelText(studentName)}</h3>
+
+        <p>
+          رقم التسجيل: ${escapeExcelText(s.registration_number || '')}
+          — الفوج: ${s.group_number || 'غير محدد'}
+        </p>
+
+        <p>
+          العلامة الآلية: ${Number(a.objective_score || 0)}
+          — العلامة اليدوية: ${Number(a.manual_score || 0)}
+          — نقاط تنتظر التصحيح: ${Number(a.pending_points || 0)}
+        </p>
+
+        <h4>الإجابات الكتابية</h4>
+
+        ${
+          written.length
+          ? written.map(ans => {
+              const q = questionMap.get(ans.question_id);
+              return `
+                <div style="background:#f4f7fc;padding:12px;margin:10px 0;border-radius:10px">
+                  <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
+                  <p>${escapeExcelText(ans.written_answer || '')}</p>
+                  <p>
+                    العلامة الحالية: ${Number(ans.manual_score || 0)}
+                    / ${Number(q?.points || 0)}
+                  </p>
+                  
+<div style="margin-top:12px">
+  <label>العلامة الممنوحة:</label>
+
+  <input
+    type="number"
+    class="manual-score-input"
+    id="score-${ans.id}"
+    min="0"
+    max="${Number(q?.points || 0)}"
+    step="0.25"
+    value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
+    placeholder="من ${Number(q?.points || 0)}"
+    style="width:100%;padding:10px"
+  >
+
+  <button
+    type="button"
+    class="secondary"
+    onclick="saveManualGrade('${ans.id}')"
+  >
+    حفظ التصحيح
+  </button>
+
+  <small>
+    ${ans.graded_at ? 'تم التصحيح' : 'بانتظار التصحيح'}
+  </small>
+</div>
+
+                </div>
+              `;
+            }).join('')
+          : '<p>لا توجد إجابات كتابية.</p>'
+        }
+      </article>
+    `;
+  }).join('');
+}
+
+async function saveManualGrade(answerId) {
+  if (!await teacher()) {
+    alert('انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+
+  const input = $('score-' + answerId);
+  const score = Number(input.value);
+
+  if (input.value.trim() === '' || !Number.isFinite(score) || score < 0) {
+    alert('يرجى إدخال علامة صحيحة.');
+    return;
+  }
+
+  const btn = input.parentElement.querySelector('button');
+  btn.disabled = true;
+
+  const { data, error } = await db.rpc('grade_exam_answer', {
+    p_answer_id: answerId,
+    p_score: score
+  });
+
+  btn.disabled = false;
+
+  if (error) {
+    alert('تعذر حفظ التصحيح: ' + error.message);
+    return;
+  }
+
+  alert('تم حفظ التصحيح بنجاح.');
+
+  const examId = $('results-exam').value;
+  if (examId) await loadResults(examId);
+}
+
+async function exportResultsExcel() {
+  const examId = $('results-exam').value;
+
+  if (!examId) {
+    status('export-status', 'يرجى اختيار الامتحان أولاً.');
+    return;
+  }
+
+  if (typeof XLSX === 'undefined') {
+    status('export-status', 'تعذر تحميل مكتبة Excel. تحقق من الاتصال بالإنترنت.');
+    return;
+  }
+
+  const btn = $('export-results');
+  btn.disabled = true;
+
+  try {
+    if (!await teacher()) {
+      status('export-status', 'انتهت الجلسة أو لا تملك الصلاحية.');
+      return;
+    }
+
+    status('export-status', 'جارٍ تجهيز ملف النتائج...');
+
+    const { data, error } = await db
+  .from('exam_attempts')
+  .select(`
+    submitted_at,
+    objective_score,
+    manual_score,
+    pending_points,
+    student_profiles!exam_attempts_student_profile_fkey(
+      registration_number,
+      first_name,
+      last_name,
+      group_number
+    )
+  `)
+  .eq('exam_id', examId)
+      .not('submitted_at', 'is', null)
+      .order('started_at', { ascending: true });
+
+    if (error) {
+      console.error('Supabase Export Error:', error);
+status('export-status', 'خطأ قاعدة البيانات: ' + error.message);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      status('export-status', 'لا توجد محاولات مسلّمة لهذا الامتحان.');
+      return;
+    }
+const selectedGroup = $('results-group').value;
+
+const filteredData = (data || []).filter(a =>
+  a.student_profiles &&
+  (selectedGroup === 'all' ||
+   String(a.student_profiles.group_number) === selectedGroup)
+);
+    const completed = filteredData.filter(a =>
+  Number(a.pending_points || 0) <= 0 &&
+  a.student_profiles
+);
+
+const incompleteCount = filteredData.length - completed.length;
+
+if (!completed.length) {
+  status(
+    'export-status',
+    'لا توجد نتائج مكتملة التصحيح بعد. المحاولات المسلّمة: ' +
+    data.length
+  );
+  return;
+}
+    const rows = completed.map(a => {
+      const student = a.student_profiles;
+
+      return {
+  اللقب: student.last_name || '',
+  الاسم: student.first_name || '',
+  الفوج: student.group_number || 'غير محدد',
+  'رقم التسجيل': student.registration_number || '',
+  العلامة: Number(a.objective_score || 0) + Number(a.manual_score || 0)
+}
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows, {
+      header: ['اللقب', 'الاسم', 'الفوج', 'رقم التسجيل', 'العلامة']
+    });
+
+    worksheet['!cols'] = [
+       { wch: 20 },
+       { wch: 20 },
+       { wch: 12 },
+       { wch: 18 },
+       { wch: 12 }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'النتائج');
+
+    const examName = $('results-exam')
+      .selectedOptions[0].textContent
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, '_');
+
+    XLSX.writeFile(
+      workbook,
+      'نتائج_' + examName + '.xlsx'
+    );
+
+    status(
+      'export-status',
+      'تم إنشاء ملف Excel بنجاح. عدد النتائج المصدّرة: ' +
+      completed.length +
+      (incompleteCount
+        ? ' — لم تُدرج ' + incompleteCount +
+          ' محاولة غير مكتملة التصحيح أو غير مرتبطة ببيانات طالب.'
+        : '')
+    );
+
+  } catch (err) {
+  console.error('Excel Export Error:', err);
+  status(
+    'export-status',
+    'حدث خطأ أثناء التصدير: ' +
+    (err.message || String(err))
+  );
+} finally {
+  btn.disabled = false;
+}
+}
+
+async function createStudent(e){
+  e.preventDefault();
+
+  if(!await teacher()){
+    status('student-status','انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+  const registrationNumber=$('new-student-number').value.trim();
+  const lastName=$('new-student-last-name').value.trim();
+  const firstName=$('new-student-first-name').value.trim();
+  const password=$('new-student-password').value;
+const groupNumber = Number($('new-student-group').value);
+
+if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
+  status('student-status', 'يرجى اختيار فوج الطالب.');
+  return;
+}
+  if(!/^[0-9]{8}$/.test(registrationNumber)){
+    status('student-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');
+    return;
+  }
+
+  if(!firstName || !lastName){
+    status('student-status','يرجى إدخال الاسم واللقب.');
+    return;
+  }
+
+  if(password.length<8){
+    status('student-status','كلمة المرور يجب ألا تقل عن 8 أحرف.');
+    return;
+  }
+
+  const btn=$('create-student');
+  btn.disabled=true;
+  status('student-status','جارٍ إنشاء الحساب...');
+try {
+  const { data, error } = await db.functions.invoke('create-student', {
+    body: {
+      registration_number: registrationNumber,
+      password: password,
+      first_name: firstName,
+      last_name: lastName,
+      group_number: groupNumber
+    }
+  });
+
+  if (error) {
+    status('student-status', 'تعذر إنشاء الحساب: ' + error.message);
+    return;
+  }
+
+    if(data?.error){
+      status('student-status','تعذر إنشاء الحساب: '+data.error);
+      return;
+    }
+
+    $('student-form').reset();
+
+    status(
+      'student-status',
+      'تم إنشاء حساب الطالب: '+lastName+' '+firstName+
+      ' — رقم الدخول: '+registrationNumber
+    );
+
+  } catch(error) {
+    status('student-status','حدث خطأ: '+error.message);
+  } finally {
+    btn.disabled=false;
+  }
+}
+
+async function resetStudentPassword(e) {
+  e.preventDefault();
+
+  if (!await teacher()) {
+    status('reset-password-status',
+      'انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+
+  const registration = $('reset-student-number').value.trim();
+  const password = $('reset-new-password').value;
+  const confirmation = $('reset-confirm-password').value;
+
+  if (!/^[0-9]{8}$/.test(registration)) {
+    status('reset-password-status',
+      'رقم التسجيل يجب أن يتكون من 8 أرقام.');
+    return;
+  }
+
+  if (password.length < 8) {
+    status('reset-password-status',
+      'كلمة المرور يجب ألا تقل عن 8 أحرف.');
+    return;
+  }
+
+  if (password !== confirmation) {
+    status('reset-password-status',
+      'كلمتا المرور غير متطابقتين.');
+    return;
+  }
+
+  const btn = $('reset-password-button');
+  btn.disabled = true;
+
+  status('reset-password-status',
+    'جارٍ تغيير كلمة المرور...');
+
+  try {
+    const { data, error } = await db.functions.invoke(
+      'bright-responder',
+      {
+        body: {
+          registration_number: registration,
+          new_password: password
+        }
+      }
+    );
+
+    if (error) {
+      status('reset-password-status',
+        'تعذر تنفيذ العملية: ' + error.message);
+      return;
+    }
+
+    if (data?.error) {
+      status('reset-password-status', data.error);
+      return;
+    }
+
+    $('reset-password-form').reset();
+
+    status('reset-password-status',
+      'تم تغيير كلمة مرور الطالب بنجاح.');
+
+  } catch (err) {
+    status('reset-password-status',
+      'حدث خطأ: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+  async function importStudentsExcel() {
+  const fileInput = $('students-excel');
+  const statusBox = $('excel-status');
+  const reportBox = $('excel-report');
+  const btn = $('import-students');
+
+  reportBox.innerHTML = '';
+
+  if (!await teacher()) {
+    status('excel-status', 'انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
+const groupNumber = Number($('import-group').value);
+
+if (!Number.isInteger(groupNumber) || groupNumber < 1 || groupNumber > 6) {
+  status('excel-status', 'يرجى اختيار فوج الطلبة قبل الاستيراد.');
+  return;
+}
+  const file = fileInput.files[0];
+
+  if (!file) {
+    status('excel-status', 'يرجى اختيار ملف Excel أولاً.');
+    return;
+  }
+
+  if (typeof XLSX === 'undefined') {
+    status('excel-status', 'تعذر تحميل مكتبة قراءة Excel. تحقق من الاتصال بالإنترنت.');
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    status('excel-status', 'جارٍ قراءة ملف Excel...');
+
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    const rows = XLSX.utils.sheet_to_json(sheet, {
+      defval: '',
+      raw: false
+    });
+
+    if (!rows.length) {
+      status('excel-status', 'الملف فارغ أو لا يحتوي على بيانات.');
+      return;
+    }
+
+    // توحيد أسماء الأعمدة لتسهيل قراءتها
+    function normalizeHeader(value) {
+      return String(value || '')
+        .trim()
+        .replace(/\s+/g, '')
+        .replace(/[أإآ]/g, 'ا');
+    }
+
+    const headers = Object.keys(rows[0]);
+    const columns = {};
+
+    for (const h of headers) {
+      const key = normalizeHeader(h);
+
+      if (key === 'الاسم') columns.firstName = h;
+      if (key === 'اللقب') columns.lastName = h;
+      if (key === 'رقمالتسجيل') columns.registration = h;
+      if (key === 'كلمةالسر') columns.password = h;
+    }
+
+    if (
+      !columns.firstName ||
+      !columns.lastName ||
+      !columns.registration ||
+      !columns.password
+    ) {
+      status(
+        'excel-status',
+        'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.'
+      );
+      return;
+    }
+
+    const seen = new Set();
+    const errors = [];
+    let success = 0;
+
+    status(
+      'excel-status',
+      'تمت قراءة ' + rows.length + ' صفاً. جارٍ إنشاء الحسابات...'
+    );
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      const firstName = String(row[columns.firstName] ?? '').trim();
+      const lastName = String(row[columns.lastName] ?? '').trim();
+
+      const registrationNumber = String(
+        row[columns.registration] ?? ''
+      ).trim().replace(/\.0$/, '');
+
+      const password = String(row[columns.password] ?? '').trim();
+
+      const excelRow = i + 2;
+
+      if (!firstName || !lastName) {
+        errors.push('السطر ' + excelRow + ': الاسم أو اللقب فارغ.');
+        continue;
+      }
+
+      if (!/^[0-9]{8}$/.test(registrationNumber)) {
+        errors.push('السطر ' + excelRow + ': رقم التسجيل يجب أن يتكون من 8 أرقام.');
+        continue;
+      }
+
+      if (password.length < 8) {
+        errors.push('السطر ' + excelRow + ': كلمة السر أقل من 8 أحرف.');
+        continue;
+      }
+
+      if (seen.has(registrationNumber)) {
+        errors.push('السطر ' + excelRow + ': رقم التسجيل مكرر داخل الملف.');
+        continue;
+      }
+
+      seen.add(registrationNumber);
+
+      try {
+        const { data, error } = await db.functions.invoke('create-student', {
+  body: {
+    first_name: firstName,
+    last_name: lastName,
+    group_number: groupNumber,
+    registration_number: registrationNumber,
+    password: password
+  }
+});
+
+        if (error) {
+          errors.push(
+            'السطر ' + excelRow + ' (' + registrationNumber +
+            '): ' + error.message
+          );
+          continue;
+        }
+
+        if (data?.error) {
+          errors.push(
+            'السطر ' + excelRow + ' (' + registrationNumber +
+            '): ' + data.error
+          );
+          continue;
+        }
+
+        success++;
+
+      } catch (err) {
+        errors.push(
+          'السطر ' + excelRow + ': ' + (err.message || 'خطأ غير معروف')
+        );
+      }
+
+      status(
+        'excel-status',
+        'تقدم الاستيراد: ' + (i + 1) + ' من ' + rows.length +
+        ' — تم إنشاء ' + success + ' حساباً.'
+      );
+    }
+
+    let report = `
+  <div class="status">
+    <strong>انتهى الاستيراد</strong><br>
+    عدد الصفوف: ${rows.length}<br>
+    الحسابات المنشأة بنجاح: ${success}<br>
+    الصفوف التي تعذر استيرادها: ${errors.length}
+  </div>
+`;
+    if (errors.length) {
+  const errorItems = errors
+    .map(e => '<li>' + escapeExcelText(e) + '</li>')
+    .join('');
+
+  report +=
+    '<div class="question-editor">' +
+      '<strong>تفاصيل الأخطاء:</strong>' +
+      '<ul>' + errorItems + '</ul>' +
+    '</div>';
+}
+
+reportBox.innerHTML = report;
+
+    status(
+      'excel-status',
+      'اكتمل الاستيراد. الحسابات المنشأة: ' + success +
+      '، الأخطاء: ' + errors.length
+    );
+
+    if (success > 0) {
+      fileInput.value = '';
+    }
+
+  } catch (err) {
+    status('excel-status', 'تعذر قراءة الملف: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeExcelText(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+$('import-students').addEventListener('click', importStudentsExcel);
+  $('student-form').addEventListener('submit',createStudent);
+$('reset-password-form').addEventListener(
+  'submit',
+  resetStudentPassword
+);
+  $('results-exam').addEventListener('change',e=>loadResults(e.target.value));$('results-group').addEventListener('change', () => {
+  const examId = $('results-exam').value;
+  if (examId) loadResults(examId);
+});$('export-results').addEventListener('click', exportResultsExcel);$('login-form').addEventListener('submit',login);$('add-mcq').onclick=()=>addQuestion('mcq');$('add-written').onclick=()=>addQuestion('written');$('exam-form').addEventListener('submit',saveExam);$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};(async()=>{const {data:{session}}=await db.auth.getSession();if(session&&await teacher()){$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}})();
+</script></body></html>
+
