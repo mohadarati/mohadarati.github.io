@@ -1,261 +1,32 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>الامتحانات الإلكترونية | محاضراتي</title>
-<!-- تم إصلاح رابط خط Google Fonts -->
-<link href="https://googleapis.com" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;font-family:'Amiri',serif}
-body{margin:0;background:#f4f7fc;color:#172b4d}
-header{background:#fff;padding:14px max(5vw,20px);display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 3px 18px #18376e14}
-a{color:#155eef;text-decoration:none;font-weight:700}
-.brand{font-size:21px;color:#174ea6;font-weight:800}
-main{max-width:900px;margin:30px auto;padding:0 16px}
-.panel{background:#fff;border:1px solid #e3eaf5;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 8px 25px #1b3b7010}
-h1,h2,h3{color:#173b76;margin-top:0}
-.note{color:#7183a2;font-size:13px;line-height:1.8}
-.field{display:grid;gap:7px;margin:12px 0;font-weight:700}
-.field input{width:100%;padding:12px;border:1px solid #dce5f2;border-radius:10px;background:#f9fbff;font:inherit}
-button{border:0;border-radius:10px;padding:11px 17px;background:#155eef;color:white;font:inherit;font-weight:700;cursor:pointer}
-button:disabled{opacity:.55;cursor:not-allowed}
-.secondary{background:#eaf1ff;color:#155eef}
-.exam-card{border:1px solid #e3eaf5;border-radius:13px;padding:16px;margin:10px 0;background:#fbfcff}
-.exam-card p{color:#7183a2}
-.meta{font-size:12px;color:#7183a2;margin:8px 0}
-.question{border-top:1px solid #edf1f7;padding:18px 0}
-.question h3{font-size:18px}
-.option{display:flex;gap:9px;align-items:flex-start;padding:9px 12px;margin:7px 0;border:1px solid #e3eaf5;border-radius:10px;background:#fbfcff;cursor:pointer}
-.option input{margin-top:7px}
-.question textarea{width:100%;min-height:100px;padding:12px;border:1px solid #dce5f2;border-radius:10px;font:inherit}
-.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.timer{font-weight:800;color:#b42318;background:#fff1f0;padding:8px 13px;border-radius:9px}
-.status{padding:12px;background:#eaf1ff;border-radius:10px;margin:12px 0;line-height:1.8;display:none;color:#173b76}
-.status.error{background:#fff1f0;color:#b42318}
-.hidden{display:none!important}
-.score{font-size:25px;color:#155eef;font-weight:800}
-@media(max-width:560px){.panel{padding:16px}header{align-items:flex-start;flex-direction:column}}
-</style>
-</head>
-<body>
-<header>
-    <div class="brand">محاضراتي — الامتحانات الإلكترونية</div>
-    <a href="./index.html">العودة إلى الموقع ←</a>
-</header>
-
+*{box-sizing:border-box;font-family:'Amiri',serif}body{margin:0;background:#f4f7fc;color:#172b4d}header{background:#fff;padding:14px max(5vw,20px);display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 3px 18px #18376e14}a{color:#155eef;text-decoration:none;font-weight:700}.brand{font-size:21px;color:#174ea6;font-weight:800}main{max-width:900px;margin:30px auto;padding:0 16px}.panel{background:#fff;border:1px solid #e3eaf5;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 8px 25px #1b3b7010}h1,h2,h3{color:#173b76;margin-top:0}.note{color:#7183a2;font-size:13px;line-height:1.8}.field{display:grid;gap:7px;margin:12px 0;font-weight:700}.field input{width:100%;padding:12px;border:1px solid #dce5f2;border-radius:10px;background:#f9fbff;font:inherit}button{border:0;border-radius:10px;padding:11px 17px;background:#155eef;color:white;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#eaf1ff;color:#155eef}.exam-card{border:1px solid #e3eaf5;border-radius:13px;padding:16px;margin:10px 0;background:#fbfcff}.exam-card p{color:#7183a2}.meta{font-size:12px;color:#7183a2;margin:8px 0}.question{border-top:1px solid #edf1f7;padding:18px 0}.question h3{font-size:18px}.option{display:flex;gap:9px;align-items:flex-start;padding:9px 12px;margin:7px 0;border:1px solid #e3eaf5;border-radius:10px;background:#fbfcff}.option input{margin-top:7px}.question textarea{width:100%;min-height:100px;padding:12px;border:1px solid #dce5f2;border-radius:10px;font:inherit}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.timer{font-weight:800;color:#b42318;background:#fff1f0;padding:8px 13px;border-radius:9px}.status{padding:12px;background:#eaf1ff;border-radius:10px;margin:12px 0;line-height:1.8;display:none}.hidden{display:none!important}.score{font-size:25px;color:#155eef;font-weight:800}@media(max-width:560px){.panel{padding:16px}header{align-items:flex-start;flex-direction:column}}
+</style></head><body>
+<header><div class="brand">محاضراتي — الامتحانات الإلكترونية</div><a href="./index.html">العودة إلى الموقع ←</a></header>
 <main>
-    <!-- قسم تسجيل الدخول -->
-    <section class="panel" id="auth-panel">
-        <h1>دخول الطالب</h1>
-        <p class="note">هذا القسم مخصص للطلبة المسجلين فقط. أدخل رقم تسجيلك الجامعي (8 أرقام) وكلمة المرور التي زودتك بها الإدارة.</p>
-        <form id="login-form">
-            <label class="field">رقم التسجيل الجامعي
-                <input id="student-number" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" placeholder="مثال: 37552606" autocomplete="username" required>
-            </label>
-            <label class="field">كلمة المرور
-                <input id="student-password" type="password" autocomplete="current-password" required>
-            </label>
-            <button type="submit" id="login-btn">تسجيل الدخول</button>
-        </form>
-        <div id="auth-status" class="status" role="status"></div>
-    </section>
-
-    <!-- قسم الامتحانات المتاحة -->
-    <section id="student-view" class="hidden">
-        <div class="panel toolbar">
-            <div>
-                <h1>الامتحانات المتاحة</h1>
-                <p class="note">اختر الامتحان المناسب. يمكنك إرسال إجاباتك مرة واحدة.</p>
-            </div>
-            <button class="secondary" id="logout-btn">تسجيل الخروج</button>
-        </div>
-        <div id="exam-list" class="panel">جارٍ تحميل الامتحانات…</div>
-    </section>
-
-    <!-- قسم أداء الامتحان -->
-    <section id="attempt-view" class="panel hidden">
-        <div class="toolbar">
-            <div>
-                <h1 id="attempt-title">الامتحان</h1>
-                <p class="note" id="attempt-description"></p>
-            </div>
-            <div class="timer" id="timer">الوقت المتبقي: --:--</div>
-        </div>
-        <form id="answer-form">
-            <div id="question-list"></div>
-            <button type="submit" id="submit-btn">إنهاء الامتحان وإرسال الإجابات</button>
-        </form>
-    </section>
-
-    <!-- قسم النتيجة -->
-    <section id="result-view" class="panel hidden">
-        <h1>نتيجة الامتحان</h1>
-        <div id="result-content"></div>
-        <button class="secondary" id="back-btn">العودة إلى الامتحانات</button>
-    </section>
+<section class="panel" id="auth-panel"><h1>دخول الطالب</h1><p class="note">هذا القسم مخصص للطلبة المسجلين فقط. أدخل رقم تسجيلك الجامعي (8 أرقام) وكلمة المرور التي زودتك بها الإدارة.</p><form id="login-form"><label class="field">رقم التسجيل الجامعي<input id="student-number" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" placeholder="مثال: 37552606" autocomplete="username" required></label><label class="field">كلمة المرور<input id="student-password" type="password" autocomplete="current-password" required></label><button id="login-btn">تسجيل الدخول</button></form><div id="auth-status" class="status" role="status"></div></section>
+<section id="student-view" class="hidden"><div class="panel toolbar"><div><h1>الامتحانات المتاحة</h1><p class="note">اختر الامتحان المناسب. يمكنك إرسال إجاباتك مرة واحدة.</p></div><button class="secondary" id="logout-btn">تسجيل الخروج</button></div><div id="exam-list" class="panel">جارٍ تحميل الامتحانات…</div></section>
+<section id="attempt-view" class="panel hidden"><div class="toolbar"><div><h1 id="attempt-title">الامتحان</h1><p class="note" id="attempt-description"></p></div><div class="timer" id="timer">الوقت المتبقي: --:--</div></div><form id="answer-form"><div id="question-list"></div><button type="submit" id="submit-btn">إنهاء الامتحان وإرسال الإجابات</button></form></section>
+<section id="result-view" class="panel hidden"><h1>نتيجة الامتحان</h1><div id="result-content"></div><button class="secondary" id="back-btn">العودة إلى الامتحانات</button></section>
 </main>
-
-<!-- 1. تم إصلاح رابط مكتبة Supabase -->
-<script src="https://jsdelivr.net"></script>
-<script>
-// 2. تنبيه: ضع رابط مشروعك الحقيقي من لوحة تحكم Supabase مكان الرابط التالي
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co'; 
-const SUPABASE_KEY = 'sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b';
-
-let db = null;
-try {
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch (e) {
-    console.error("خطأ في تهيئة Supabase:", e);
-}
-
-let currentExam = null, currentAttempt = null, timerHandle = null, deadline = null;
-let isSubmitting = false;
-let examExpired = false;
-
-const $ = id => document.getElementById(id);
-
-// 3. تم إصلاح خطأ علامة التنصيص المفردة في دالة esc
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-}[c]));
-
-function showStatus(id, msg, isError = false) {
-    const el = $(id);
-    el.textContent = msg;
-    el.classList.toggle('error', isError);
-    el.style.display = 'block';
-}
-
-function showOnly(id) {
-    ['auth-panel', 'student-view', 'attempt-view', 'result-view'].forEach(x => {
-        $(x).classList.toggle('hidden', x !== id);
-    });
-}
-
-// التحقق من حالة تسجيل الدخول عند فتح الصفحة
-async function checkSession() {
-    if (!db) return;
-    const { data: { session } } = await db.auth.getSession();
-    if (session) {
-        showOnly('student-view');
-        loadExams();
-    } else {
-        showOnly('auth-panel');
-    }
-}
-
-// تسجيل الدخول
-$('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = $('login-btn');
-    const studentNum = $('student-number').value.trim();
-    const password = $('student-password').value;
-
-    btn.disabled = true;
-    showStatus('auth-status', 'جارٍ التحقق من البيانات...');
-
-    // ملاحظة: تأكد من صيغة البريد الإلكتروني المعتمدة في نظامك (مثلاً: رقم_التسجيل@domain.com)
-    const email = `${studentNum}@students.local`; 
-
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    btn.disabled = false;
-
-    if (error) {
-        showStatus('auth-status', 'فشل تسجيل الدخول: تأكد من رقم التسجيل وكلمة المرور.', true);
-    } else {
-        $('auth-status').style.display = 'none';
-        showOnly('student-view');
-        loadExams();
-    }
-});
-
-// تسجيل الخروج
-$('logout-btn').addEventListener('click', async () => {
-    clearInterval(timerHandle);
-    await db.auth.signOut();
-    showOnly('auth-panel');
-});
-
-// تحميل الامتحانات
-async function loadExams() {
-    const box = $('exam-list');
-    box.textContent = 'جارٍ تحميل الامتحانات…';
-
-    const { data, error } = await db
-        .from('exams')
-        .select('id,title,description,duration_minutes,starts_at,ends_at')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        box.textContent = 'تعذر تحميل الامتحانات: ' + error.message;
-        return;
-    }
-
-    const now = Date.now();
-    const active = (data || []).filter(x =>
-        (!x.starts_at || new Date(x.starts_at).getTime() <= now) &&
-        (!x.ends_at || new Date(x.ends_at).getTime() >= now)
-    );
-
-    if (!active.length) {
-        box.textContent = 'لا توجد امتحانات متاحة حالياً.';
-        return;
-    }
-
-    const { data: attempts } = await db
-        .from('exam_attempts')
-        .select('id,exam_id,submitted_at,objective_score,manual_score,pending_points,max_objective_points')
-        .in('exam_id', active.map(x => x.id));
-
-    const byExam = new Map((attempts || []).map(a => [a.exam_id, a]));
-
-    box.innerHTML = active.map(x => {
-        const a = byExam.get(x.id);
-        return `
-        <article class="exam-card">
-            <h2>${esc(x.title)}</h2>
-            <p>${esc(x.description || 'امتحان إلكتروني')}</p>
-            <div class="meta">المدة: ${x.duration_minutes} دقيقة</div>
-            ${a?.submitted_at
-                ? `<p class="note">تم إرسال إجابتك — العلامة الآلية: ${a.objective_score} / ${a.max_objective_points} — العلامة الكتابية: ${a.manual_score || 0}${a.pending_points > 0 ? ' (بانتظار التصحيح)' : ''}</p>`
-                : `<button type="button" data-exam="${esc(x.id)}">${a ? 'متابعة الامتحان' : 'ابدأ الامتحان'}</button>`
-            }
-        </article>`;
-    }).join('');
-
-    box.querySelectorAll('[data-exam]').forEach(b =>
-        b.addEventListener('click', () => startExam(b.dataset.exam))
-    );
-}
-
-// بدء الامتحان (تم استكمال الجزء المقطوع)
-async function startExam(id) {
-    isSubmitting = false;
-    examExpired = false;
-
-    const { data: attemptId, error: startError } = await db.rpc('start_exam', { p_exam_id: id });
-    if (startError) {
-        alert('تعذر بدء الامتحان: ' + startError.message);
-        return;
-    }
-
-    const { data: exam, error } = await db
-        .from('exams')
-        .select('id,title,description,duration_minutes')
-        .eq('id', id)
-        .single();
-    if (error) {
-        alert('خطأ في جلب بيانات الامتحان: ' + error.message);
-        return;
-    }
-
-    const { data: questions, error: qerr } = await db
-        .from('exam_questions')
-        .select('id,question_text,question_type,points,position,exam_options(id,option_text,position)')
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co';const SUPABASE_KEY='sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b';const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentExam=null,currentAttempt=null,timerHandle=null,deadline=null;
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function showStatus(id,msg){$(id).textContent=msg;$(id).style.display='block'}function showOnly(id){['auth-panel','student-view','attempt-view','result-view'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}
+async function loadExams(){const box=$('exam-list');box.textContent='جارٍ تحميل الامتحانات…';const {data,error}=await db.from('exams').select('id,title,description,duration_minutes,starts_at,ends_at').eq('is_published',true).order('created_at',{ascending:false});if(error){box.textContent='تعذر تحميل الامتحانات. '+error.message;return;}const now=Date.now();const active=(data||[]).filter(x=>(!x.starts_at||new Date(x.starts_at).getTime()<=now)&&(!x.ends_at||new Date(x.ends_at).getTime()>=now));if(!active.length){box.textContent='لا توجد امتحانات متاحة حالياً.';return;}const {data:attempts}=await db.from('exam_attempts').select('id,exam_id,submitted_at,objective_score,manual_score,pending_points,max_objective_points').in('exam_id',active.map(x=>x.id));const byExam=new Map((attempts||[]).map(a=>[a.exam_id,a]));box.innerHTML=active.map(x=>{const a=byExam.get(x.id);return `<article class="exam-card"><h2>${esc(x.title)}</h2><p>${esc(x.description||'امتحان إلكتروني')}</p><div class="meta">المدة: ${x.duration_minutes} دقيقة</div>${a?.submitted_at?`<p class="note">تم إرسال إجابتك — العلامة الآلية: ${a.objective_score} / ${a.max_objective_points} — العلامة الكتابية: ${a.manual_score||0}${a.pending_points>0?' (بانتظار التصحيح)':''}</p>`:`<button data-exam="${esc(x.id)}">${a?'متابعة الامتحان':'ابدأ الامتحان'}</button>`}</article>`}).join('');box.querySelectorAll('[data-exam]').forEach(b=>b.addEventListener('click',()=>startExam(b.dataset.exam)));}
+async function startExam(id){const {data:attemptId,error:startError}=await db.rpc('start_exam',{p_exam_id:id});if(startError){alert('تعذر بدء الامتحان: '+startError.message);return;}const {data:exam,error}=await db.from('exams').select('id,title,description,duration_minutes').eq('id',id).single();if(error){alert(error.message);return;}const {data:questions,error:qerr}=await db.from('exam_questions').select('id,question_text,question_type,points,position,exam_options(id,option_text,position)').eq('exam_id',id).order('position');if(qerr){alert('تعذر تحميل الأسئلة: '+qerr.message);return;}currentExam=exam;currentAttempt=attemptId;$('attempt-title').textContent=exam.title;$('attempt-description').textContent=exam.description||'';$('question-list').innerHTML=questions.map((q,i)=>`<article class="question"><h3>${i+1}. ${esc(q.question_text)} <small>(${q.points} نقطة)</small></h3>${q.question_type==='mcq'?(q.exam_options||[]).sort((a,b)=>a.position-b.position).map(o=>`<label class="option"><input type="radio" name="q_${q.id}" value="${esc(o.id)}"><span>${esc(o.option_text)}</span></label>`).join(''):`<textarea name="q_${q.id}" placeholder="اكتب إجابتك هنا…"></textarea>`}</article>`).join('')||'<p>لا توجد أسئلة في هذا الامتحان.</p>';
+const {data:attempt}=await db.from('exam_attempts').select('started_at').eq('id',attemptId).single();deadline=new Date(attempt.started_at).getTime()+exam.duration_minutes*60000;showOnly('attempt-view');runTimer();}
+function runTimer(){clearInterval(timerHandle);const tick=()=>{const left=Math.max(0,deadline-Date.now());const m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('timer').textContent=`الوقت المتبقي: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;if(left<=0){clearInterval(timerHandle);submitAnswers(true);}};tick();timerHandle=setInterval(tick,1000);}
+async function submitAnswers(auto=false){if(!currentAttempt)return;const btn=$('submit-btn');btn.disabled=true;const answers=[];$('question-list').querySelectorAll('.question').forEach(q=>{const control=q.querySelector('input[type=radio]:checked')||q.querySelector('textarea');if(!control)return;const questionId=control.name.slice(2);if(control.type==='radio')answers.push({question_id:questionId,selected_option_id:control.value});else answers.push({question_id:questionId,written_answer:control.value});});const {data,error}=await db.rpc('submit_exam',{p_attempt_id:currentAttempt,p_answers:answers});btn.disabled=false;if(error){alert('تعذر إرسال الإجابات: '+error.message);return;}clearInterval(timerHandle);$('result-content').innerHTML=`<p class="score">العلامة الآلية: ${data.objective_score} / ${data.max_objective_points}</p><p>العلامة الكتابية المصححة: ${data.manual_score||0}</p><p>علامات الأسئلة الكتابية التي تنتظر تصحيح الأستاذ: ${data.pending_points}</p><p class="note">هذه نتيجة أولية؛ ستضاف علامة الأسئلة الكتابية بعد تصحيح الأستاذ.</p>`;showOnly('result-view');currentAttempt=null;}
+$('login-form').addEventListener('submit',async e=>{e.preventDefault();$('login-btn').disabled=true;const registrationNumber=$('student-number').value.trim();
+if(!/^\d{8}$/.test(registrationNumber)){showStatus('auth-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');return;}
+const studentEmail=registrationNumber+'@students.mohadarati.dz';
+const {error}=await db.auth.signInWithPassword({email:studentEmail,password:$('student-password').value});$('login-btn').disabled=false;if(error){showStatus('auth-status','تعذر تسجيل الدخول: '+error.message);return;}showOnly('student-view');await loadExams();});$('logout-btn').addEventListener('click',async()=>{await db.auth.signOut();showOnly('auth-panel')});$('answer-form').addEventListener('submit',e=>{e.preventDefault();if(confirm('هل تريد إنهاء الامتحان وإرسال إجاباتك؟'))submitAnswers(false)});$('back-btn').addEventListener('click',async()=>{showOnly('student-view');await loadExams()});
+(async()=>{const {data:{session}}=await db.auth.getSession();if(session){showOnly('student-view');await loadExams();}})();
+</script></body></html>
