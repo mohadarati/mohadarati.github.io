@@ -426,7 +426,7 @@ const filteredData = (data || []).filter(a =>
   a.student_profiles
 );
 
-const incompleteCount = data.length - completed.length;
+const incompleteCount = filteredData.length - completed.length;
 
 if (!completed.length) {
   status(
@@ -440,10 +440,10 @@ if (!completed.length) {
       const student = a.student_profiles;
 
       return {
-  اللقب: s.last_name,
-  الاسم: s.first_name,
-  'رقم التسجيل': s.registration_number,
-  الفوج: s.group_number || 'غير محدد',
+  اللقب: student.last_name || '',
+  الاسم: student.first_name || '',
+  الفوج: student.group_number || 'غير محدد',
+  'رقم التسجيل': student.registration_number || '',
   العلامة: Number(a.objective_score || 0) + Number(a.manual_score || 0)
 }
     });
@@ -453,10 +453,11 @@ if (!completed.length) {
     });
 
     worksheet['!cols'] = [
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 18 },
-      { wch: 12 }
+       { wch: 20 },
+       { wch: 20 },
+       { wch: 12 },
+       { wch: 18 },
+       { wch: 12 }
     ];
 
     const workbook = XLSX.utils.book_new();
