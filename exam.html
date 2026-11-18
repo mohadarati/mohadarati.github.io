@@ -11,9 +11,14 @@
 <main>
 <section class="panel" id="auth-panel"><h1>دخول الطالب</h1><p class="note">هذا القسم مخصص للطلبة المسجلين فقط. أدخل رقم تسجيلك الجامعي (8 أرقام) وكلمة المرور التي زودتك بها الإدارة.</p><form id="login-form"><label class="field">رقم التسجيل الجامعي<input id="student-number" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" placeholder="مثال: 37552606" autocomplete="username" required></label><label class="field">كلمة المرور<input id="student-password" type="password" autocomplete="current-password" required></label><button id="login-btn">تسجيل الدخول</button></form><div id="auth-status" class="status" role="status"></div></section>
 <section id="student-view" class="hidden"><div class="panel toolbar"><div><h1>الامتحانات المتاحة</h1><p class="note">اختر الامتحان المناسب. يمكنك إرسال إجاباتك مرة واحدة.</p></div><button class="secondary" id="logout-btn">تسجيل الخروج</button></div><div id="exam-list" class="panel">جارٍ تحميل الامتحانات…</div></section>
-<section id="attempt-view" class="panel hidden"><div class="toolbar"><div><h1 id="attempt-title">الامتحان</h1><p class="note" id="attempt-description"></p></div><div class="timer" id="timer">الوقت المتبقي: --:--</div></div><form id="answer-form"><div id="question-list"></div><button type="submit" id="submit-btn">إنهاء الامتحان وإرسال الإجابات</button><button type="submit" id="submit-btn">
-    تسليم الامتحان
-</button></form></section>
+<section id="attempt-view" class="panel hidden"><div class="toolbar"><div><h1 id="attempt-title">الامتحان</h1><p class="note" id="attempt-description"></p></div><div class="timer" id="timer">الوقت المتبقي: --:--</div></div><form id="answer-form">
+    <div id="question-list"></div>
+
+    <button type="submit" id="submit-btn">
+        إنهاء الامتحان وإرسال الإجابات
+    </button>
+</form>
+</section>
 <section id="result-view" class="panel hidden"><h1>نتيجة الامتحان</h1><div id="result-content"></div><button class="secondary" id="back-btn">العودة إلى الامتحانات</button></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
