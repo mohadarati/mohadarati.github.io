@@ -22,7 +22,41 @@ function showStatus(id,msg){$(id).textContent=msg;$(id).style.display='block'}fu
 async function loadExams(){const box=$('exam-list');box.textContent='جارٍ تحميل الامتحانات…';const {data,error}=await db.from('exams').select('id,title,description,duration_minutes,starts_at,ends_at').eq('is_published',true).order('created_at',{ascending:false});if(error){box.textContent='تعذر تحميل الامتحانات. '+error.message;return;}const now=Date.now();const active=(data||[]).filter(x=>(!x.starts_at||new Date(x.starts_at).getTime()<=now)&&(!x.ends_at||new Date(x.ends_at).getTime()>=now));if(!active.length){box.textContent='لا توجد امتحانات متاحة حالياً.';return;}const {data:attempts}=await db.from('exam_attempts').select('id,exam_id,submitted_at,objective_score,manual_score,pending_points,max_objective_points').in('exam_id',active.map(x=>x.id));const byExam=new Map((attempts||[]).map(a=>[a.exam_id,a]));box.innerHTML=active.map(x=>{const a=byExam.get(x.id);return `<article class="exam-card"><h2>${esc(x.title)}</h2><p>${esc(x.description||'امتحان إلكتروني')}</p><div class="meta">المدة: ${x.duration_minutes} دقيقة</div>${a?.submitted_at?`<p class="note">تم إرسال إجابتك — العلامة الآلية: ${a.objective_score} / ${a.max_objective_points} — العلامة الكتابية: ${a.manual_score||0}${a.pending_points>0?' (بانتظار التصحيح)':''}</p>`:`<button data-exam="${esc(x.id)}">${a?'متابعة الامتحان':'ابدأ الامتحان'}</button>`}</article>`}).join('');box.querySelectorAll('[data-exam]').forEach(b=>b.addEventListener('click',()=>startExam(b.dataset.exam)));}
 async function startExam(id){const {data:attemptId,error:startError}=await db.rpc('start_exam',{p_exam_id:id});if(startError){alert('تعذر بدء الامتحان: '+startError.message);return;}const {data:exam,error}=await db.from('exams').select('id,title,description,duration_minutes').eq('id',id).single();if(error){alert(error.message);return;}const {data:questions,error:qerr}=await db.from('exam_questions').select('id,question_text,question_type,points,position,exam_options(id,option_text,position)').eq('exam_id',id).order('position');if(qerr){alert('تعذر تحميل الأسئلة: '+qerr.message);return;}currentExam=exam;currentAttempt=attemptId;$('attempt-title').textContent=exam.title;$('attempt-description').textContent=exam.description||'';$('question-list').innerHTML=questions.map((q,i)=>`<article class="question"><h3>${i+1}. ${esc(q.question_text)} <small>(${q.points} نقطة)</small></h3>${q.question_type==='mcq'?(q.exam_options||[]).sort((a,b)=>a.position-b.position).map(o=>`<label class="option"><input type="radio" name="q_${q.id}" value="${esc(o.id)}"><span>${esc(o.option_text)}</span></label>`).join(''):`<textarea name="q_${q.id}" placeholder="اكتب إجابتك هنا…"></textarea>`}</article>`).join('')||'<p>لا توجد أسئلة في هذا الامتحان.</p>';
 const {data:attempt}=await db.from('exam_attempts').select('started_at').eq('id',attemptId).single();deadline=new Date(attempt.started_at).getTime()+exam.duration_minutes*60000;showOnly('attempt-view');runTimer();}
-function runTimer(){clearInterval(timerHandle);const tick=()=>{const left=Math.max(0,deadline-Date.now());const m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('timer').textContent=`الوقت المتبقي: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;if(left<=0){clearInterval(timerHandle);submitAnswers(true);}};tick();timerHandle=setInterval(tick,1000);}
+function runTimer()function runTimer(){
+  clearInterval(timerHandle);
+
+  const tick = () => {
+    const left = Math.max(0, deadline - Date.now());
+
+    const h = Math.floor(left / 3600000);
+    const m = Math.floor((left % 3600000) / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+
+    $('timer').textContent =
+      `الوقت المتبقي: ${String(h).padStart(2,'0')}:` +
+      `${String(m).padStart(2,'0')}:` +
+      `${String(s).padStart(2,'0')}`;
+
+    if(left <= 0){
+      clearInterval(timerHandle);
+
+      if(!examExpired){
+        examExpired = true;
+
+        $('question-list')
+          .querySelectorAll('input, textarea')
+          .forEach(el => el.disabled = true);
+
+        $('timer').textContent = 'انتهى وقت الامتحان';
+
+        submitAnswers(true);
+      }
+    }
+  };
+
+  tick();
+  timerHandle = setInterval(tick, 1000);
+}
 async function submitAnswers(auto=false){if(!currentAttempt)return;const btn=$('submit-btn');btn.disabled=true;const answers=[];$('question-list').querySelectorAll('.question').forEach(q=>{const control=q.querySelector('input[type=radio]:checked')||q.querySelector('textarea');if(!control)return;const questionId=control.name.slice(2);if(control.type==='radio')answers.push({question_id:questionId,selected_option_id:control.value});else answers.push({question_id:questionId,written_answer:control.value});});const {data,error}=await db.rpc('submit_exam',{p_attempt_id:currentAttempt,p_answers:answers});btn.disabled=false;if(error){alert('تعذر إرسال الإجابات: '+error.message);return;}clearInterval(timerHandle);$('result-content').innerHTML=`<p class="score">العلامة الآلية: ${data.objective_score} / ${data.max_objective_points}</p><p>العلامة الكتابية المصححة: ${data.manual_score||0}</p><p>علامات الأسئلة الكتابية التي تنتظر تصحيح الأستاذ: ${data.pending_points}</p><p class="note">هذه نتيجة أولية؛ ستضاف علامة الأسئلة الكتابية بعد تصحيح الأستاذ.</p>`;showOnly('result-view');currentAttempt=null;}
 $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('login-btn').disabled=true;const registrationNumber=$('student-number').value.trim();
 if(!/^\d{8}$/.test(registrationNumber)){showStatus('auth-status','رقم التسجيل يجب أن يتكون من 8 أرقام.');return;}
