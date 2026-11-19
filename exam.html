@@ -635,9 +635,10 @@ if(!data.session){
 showStatus('auth-status','لم يتم إنشاء جلسة دخول.');
 return;
 }
-console.log('Student Auth UID:', data.user.id);
+consolshowStatus('auth-status','رقم هوية الحساب: '+data.user.id);e.log('Student Auth UID:', data.user.id);
 console.log('Student Email:', data.user.email);
-hideStatus('auth-status');
+
+  hideStatus('auth-status');
 showOnly('student-view');
 
 await loadExams();
