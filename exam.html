@@ -635,8 +635,7 @@ if(!data.session){
 showStatus('auth-status','لم يتم إنشاء جلسة دخول.');
 return;
 }
-consolshowStatus('auth-status','رقم هوية الحساب: '+data.user.id);e.log('Student Auth UID:', data.user.id);
-console.log('Student Email:', data.user.email);
+alert('رقم هوية الحساب هو: ' + data.user.id);
 
   hideStatus('auth-status');
 showOnly('student-view');
