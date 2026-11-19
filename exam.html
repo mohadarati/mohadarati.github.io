@@ -154,4 +154,49 @@ async function startExam(id) {
     showOnly('attempt-view');
     runTimer();
 }
+    
+$('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = $('login-btn');
+    btn.disabled = true;
+
+    try {
+        const registrationNumber = $('student-number').value.trim();
+        const password = $('student-password').value;
+
+        if (!/^\d{8}$/.test(registrationNumber)) {
+            showStatus('auth-status', 'رقم التسجيل يجب أن يتكون من 8 أرقام.');
+            return;
+        }
+
+        showStatus('auth-status', 'جارٍ التحقق من بيانات الدخول...');
+
+        const studentEmail = registrationNumber + '@students.mohadarati.dz';
+
+        const { data, error } = await db.auth.signInWithPassword({
+            email: studentEmail,
+            password: password
+        });
+
+        if (error) {
+            showStatus('auth-status', 'تعذر تسجيل الدخول: ' + error.message);
+            return;
+        }
+
+        if (!data.session) {
+            showStatus('auth-status', 'لم يتم إنشاء جلسة دخول.');
+            return;
+        }
+
+        $('auth-status').style.display = 'none';
+        showOnly('student-view');
+        await loadExams();
+
+    } catch (err) {
+        showStatus('auth-status', 'حدث خطأ: ' + err.message);
+    } finally {
+        btn.disabled = false;
+    }
+});
 </script></body></html>
