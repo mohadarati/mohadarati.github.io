@@ -244,6 +244,8 @@ async function loadResults(examId) {
     .from('exam_attempts')
     .select(`
       id,
+      student_id,
+      started_at,
       submitted_at,
       objective_score,
       manual_score,
@@ -256,9 +258,7 @@ async function loadResults(examId) {
       )
     `)
     .eq('exam_id', examId)
-    .not('submitted_at', 'is', null)
     .order('started_at', { ascending: true });
-
   if (error) {
     box.textContent = 'تعذر تحميل النتائج: ' + error.message;
     return;
