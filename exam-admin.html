@@ -406,7 +406,34 @@ async function loadResults(examId) {
     `;
   }).join('');
 }
+async function reopenStudentExam(examId, studentId) {
+  if (!await teacher()) {
+    alert('انتهت الجلسة أو لا تملك الصلاحية.');
+    return;
+  }
 
+  const confirmed = confirm(
+    'هل تريد إنشاء محاولة امتحان جديدة لهذا الطالب؟ ستبقى المحاولات السابقة محفوظة.'
+  );
+
+  if (!confirmed) return;
+
+  const reason = prompt('سبب إعادة فتح الامتحان (اختياري):') || '';
+
+  const { data, error } = await db.rpc('reopen_exam_for_student', {
+    p_exam_id: examId,
+    p_student_id: studentId,
+    p_reason: reason
+  });
+
+  if (error) {
+    alert('تعذرت إعادة فتح الامتحان: ' + error.message);
+    return;
+  }
+
+  alert('تم إنشاء محاولة جديدة للطالب بنجاح.');
+  await loadResults(examId);
+}
 async function saveManualGrade(answerId) {
   if (!await teacher()) {
     alert('انتهت الجلسة أو لا تملك الصلاحية.');
