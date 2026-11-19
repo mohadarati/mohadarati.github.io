@@ -328,12 +328,25 @@ async function loadResults(examId) {
 
     return `
       <article class="item" style="display:block;margin:12px 0;padding:16px">
-        <h3>${escapeExcelText(studentName)}</h3>
+       <h3>${escapeExcelText(studentName)}</h3>
 
-        <p>
-          رقم التسجيل: ${escapeExcelText(s.registration_number || '')}
-          — الفوج: ${s.group_number || 'غير محدد'}
-        </p>
+<p>
+  رقم التسجيل: ${escapeExcelText(s.registration_number || '')}
+  — الفوج: ${s.group_number || 'غير محدد'}
+</p>
+
+<p>
+  <strong>حالة المحاولة:</strong>
+  ${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}
+</p>
+
+<button
+  type="button"
+  class="secondary"
+  onclick="reopenStudentExam('${examId}', '${a.student_id}')"
+>
+  إعادة فتح الامتحان لهذا الطالب
+</button>
 
         <p>
           العلامة الآلية: ${Number(a.objective_score || 0)}
