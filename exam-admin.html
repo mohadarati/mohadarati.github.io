@@ -407,6 +407,8 @@ async function loadResults(examId) {
   }).join('');
 }
 async function reopenStudentExam(examId, studentId) {
+ async function reopenStudentExam(examId, studentId) {
+  alert('تم الضغط على زر إعادة الفتح');
   if (!await teacher()) {
     alert('انتهت الجلسة أو لا تملك الصلاحية.');
     return;
