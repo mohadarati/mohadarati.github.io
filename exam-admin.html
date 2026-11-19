@@ -439,8 +439,7 @@ async function saveManualGrade(answerId) {
   if (!await teacher()) {
     alert('انتهت الجلسة أو لا تملك الصلاحية.');
     return;
-  }
-
+  };
   const input = $('score-' + answerId);
   const score = Number(input.value);
 
