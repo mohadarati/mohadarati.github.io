@@ -587,9 +587,8 @@ if(isSubmitting){
 return;
 }
 
-if(Date.now()>deadline+60000){
-alert('انتهى الوقت المسموح للإرسال. يرجى التواصل مع الأستاذ.');
-return;
+if(deadline<=Date.now()){
+alert('انتهى الوقت المخصص لهذه المحاولة. يرجى التواصل مع الأستاذ لمعالجتها.');
 }
 
 const confirmed=confirm(
