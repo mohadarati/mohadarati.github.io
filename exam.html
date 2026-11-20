@@ -386,6 +386,7 @@ $('submit-btn').disabled=false;
 $('submit-btn').textContent='إنهاء الامتحان وإرسال الإجابات';
 
 showOnly('attempt-view');
+
 alert(
   'مدة الامتحان: '+duration+
   '\nوقت البداية: '+attempt.started_at+
@@ -393,6 +394,7 @@ alert(
   '\nالوقت الحالي: '+new Date().toLocaleString()+
   '\nالمتبقي بالدقائق: '+Math.floor((deadline-Date.now())/60000)
 );
+
 runTimer();
 
 }
