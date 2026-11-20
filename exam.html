@@ -282,7 +282,7 @@ if(!questions||questions.length===0){
 alert('لا يمكن بدء امتحان لا يحتوي على أسئلة.');
 return;
 }
-
+alert('معرّف الامتحان المرسل: '+id);
 const {data:attemptId,error:startError}=await db.rpc(
 'start_exam',
 {p_exam_id:id}
