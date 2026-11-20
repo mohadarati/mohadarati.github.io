@@ -328,7 +328,13 @@ if(!Number.isFinite(duration)||duration<=0){
 }
 
 deadline=startedAt+duration*60000;
-
+alert(
+  'المدة بالدقائق: '+duration+
+  '\nبداية المحاولة ISO: '+new Date(startedAt).toISOString()+
+  '\nوقت الجهاز ISO: '+new Date().toISOString()+
+  '\nالنهاية ISO: '+new Date(deadline).toISOString()+
+  '\nالمتبقي بالثواني: '+Math.floor((deadline-Date.now())/1000)
+);
 if(deadline<=Date.now()){
     alert(
         'انتهى الوقت حسب حساب المتصفح.\n'+
