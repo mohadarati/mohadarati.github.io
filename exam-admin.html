@@ -349,9 +349,9 @@ async function loadResults(examId) {
 </button>
 
         <p>
-                 <h4>العلامة</h4>
-        </p>
-
+  <strong>العلامة:</strong>
+  ${Number(a.objective_score || 0) + Number(a.manual_score || 0)}
+</p>
         ${
           written.length
           ? written.map(ans => {
