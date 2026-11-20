@@ -589,7 +589,11 @@ $('answer-form').addEventListener('submit',async function(e){
 e.preventDefault();
 
 if(!questionsLoaded||!currentAttempt){
-alert('لا توجد محاولة نشطة.');
+alert(
+'حالة المحاولة:\n'+
+'questionsLoaded = '+questionsLoaded+
+'\ncurrentAttempt = '+currentAttempt
+);
 return;
 }
 
