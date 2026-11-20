@@ -586,8 +586,14 @@ if(isSubmitting){
 return;
 }
 
-if(deadline<=Date.now()){
-alert('انتهى الوقت المخصص لهذه المحاولة. يرجى التواصل مع الأستاذ لمعالجتها.');
+alert(
+'فحص وقت الامتحان:\n'+
+'وقت البداية: '+attempt.started_at+'\n'+
+'المدة: '+duration+'\n'+
+'موعد النهاية المحسوب: '+new Date(deadline).toISOString()+'\n'+
+'وقت الجهاز: '+new Date().toISOString()+'\n'+
+'انتهى الوقت؟ '+(deadline<=Date.now())
+);
 }
 
 const confirmed=confirm(
