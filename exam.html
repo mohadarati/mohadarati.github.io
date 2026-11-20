@@ -341,6 +341,9 @@ if(deadline<=Date.now()){
     showOnly('student-view');
     return;
 }
+currentAttempt = attemptId;
+currentExam = exam;
+currentQuestions = questions;
 /* عرض الأسئلة */
 
 $('question-list').innerHTML=questions.map((q,i)=>{
