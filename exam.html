@@ -570,6 +570,7 @@ isSubmitting=false;
 
 }
 
+
 /* مستمع إرسال النموذج */
 
 $('answer-form').addEventListener('submit',async function(e){
@@ -587,13 +588,10 @@ return;
 
 alert(
 'فحص وقت الامتحان:\n'+
-'وقت البداية: '+attempt.started_at+'\n'+
-'المدة: '+duration+'\n'+
-'موعد النهاية المحسوب: '+new Date(deadline).toISOString()+'\n'+
 'وقت الجهاز: '+new Date().toISOString()+'\n'+
+'موعد النهاية المحسوب: '+new Date(deadline).toISOString()+'\n'+
 'انتهى الوقت؟ '+(deadline<=Date.now())
 );
-}
 
 const confirmed=confirm(
 'هل أنت متأكد من إرسال إجاباتك؟ لن تتمكن من تعديلها بعد الإرسال.'
@@ -606,6 +604,7 @@ return;
 await finishExam(false);
 
 });
+
 
 /* تسجيل الدخول */
 
