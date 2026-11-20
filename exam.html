@@ -318,30 +318,29 @@ const startedAt=new Date(attempt.started_at).getTime();
 const duration=Number(exam.duration_minutes);
 
 if(!Number.isFinite(startedAt)){
-alert('وقت بداية المحاولة غير صالح.');
-return;
+    alert('وقت بداية المحاولة غير صالح.');
+    return;
 }
 
-deadline=Date.now()+Math.max(
-  0,
-  startedAt+duration*60000-Date.now()
-);
-
-deadline=Date.now()+Math.max(
-  0,
-  startedAt+duration*60000-Date.now()
-);
+if(!Number.isFinite(duration)||duration<=0){
+    alert('مدة الامتحان غير صالحة.');
+    return;
 }
 
-/* تجهيز بيانات الامتحان */
+deadline=startedAt+duration*60000;
 
-currentExam=exam;
-currentAttempt=attemptId;
-currentQuestions=questions;
-
-$('attempt-title').textContent=exam.title;
-$('attempt-description').textContent=exam.description||'';
-
+if(deadline<=Date.now()){
+    alert(
+        'انتهى الوقت حسب حساب المتصفح.\n'+
+        'وقت البداية: '+attempt.started_at+'\n'+
+        'المدة بالدقائق: '+duration+'\n'+
+        'موعد النهاية: '+new Date(deadline).toISOString()+'\n'+
+        'وقت الجهاز: '+new Date().toISOString()
+    );
+    await loadExams();
+    showOnly('student-view');
+    return;
+}
 /* عرض الأسئلة */
 
 $('question-list').innerHTML=questions.map((q,i)=>{
