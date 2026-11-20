@@ -349,12 +349,8 @@ async function loadResults(examId) {
 </button>
 
         <p>
-          العلامة الآلية: ${Number(a.objective_score || 0)}
-          — العلامة اليدوية: ${Number(a.manual_score || 0)}
-          — نقاط تنتظر التصحيح: ${Number(a.pending_points || 0)}
+                 <h4>العلامة</h4>
         </p>
-
-        <h4>الإجابات الكتابية</h4>
 
         ${
           written.length
@@ -400,7 +396,7 @@ async function loadResults(examId) {
                 </div>
               `;
             }).join('')
-          : '<p>لا توجد إجابات كتابية.</p>'
+          : ''
         }
       </article>
     `;
