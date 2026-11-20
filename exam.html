@@ -289,7 +289,10 @@ const {data:attemptId,error:startError}=await db.rpc(
 );
 
 if(startError||!attemptId){
-alert('تعذر بدء الامتحان: '+(startError?.message||'لم يتم إنشاء المحاولة.'));
+alert(
+'تفاصيل خطأ بدء الامتحان:\n'+
+JSON.stringify(startError,null,2)
+);
 return;
 }
 
