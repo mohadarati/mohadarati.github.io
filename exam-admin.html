@@ -336,6 +336,16 @@ async function loadResults(examId) {
 </p>
 
 <p>
+  <strong>وقت دخول الامتحان:</strong>
+  ${formatAlgeriaDateTime(a.started_at)}
+</p>
+
+<p>
+  <strong>وقت انتهاء الامتحان:</strong>
+  ${formatAlgeriaDateTime(a.submitted_at)}
+</p>
+
+<p>
   <strong>حالة المحاولة:</strong>
   ${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}
 </p>
@@ -946,6 +956,22 @@ reportBox.innerHTML = report;
   } finally {
     btn.disabled = false;
   }
+}
+
+function formatAlgeriaDateTime(value) {
+  if (!value) return 'لم يتم بعد';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'غير متاح';
+  return new Intl.DateTimeFormat('ar-DZ', {
+    timeZone: 'Africa/Algiers',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(date);
 }
 
 function escapeExcelText(value) {
