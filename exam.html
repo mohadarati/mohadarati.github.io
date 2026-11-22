@@ -326,13 +326,15 @@ if(!Number.isFinite(duration)||duration<=0){
     return;
 }
 
-المدة بالدقائق
+deadline=startedAt+duration*60*1000;
+
 if(deadline<=Date.now()){
+    alert('انتهى الوقت المخصص لهذه المحاولة.');
     await loadExams();
     showOnly('student-view');
     return;
 }
-}
+
 currentAttempt = attemptId;
 currentExam = exam;
 currentQuestions = questions;
@@ -381,14 +383,6 @@ $('submit-btn').disabled=false;
 $('submit-btn').textContent='إنهاء الامتحان وإرسال الإجابات';
 
 showOnly('attempt-view');
-
-alert(
-  'مدة الامتحان: '+duration+
-  '\nوقت البداية: '+attempt.started_at+
-  '\nالوقت النهائي: '+new Date(deadline).toLocaleString()+
-  '\nالوقت الحالي: '+new Date().toLocaleString()+
-  '\nالمتبقي بالدقائق: '+Math.floor((deadline-Date.now())/60000)
-);
 
 runTimer();
 
@@ -581,13 +575,6 @@ return;
 if(isSubmitting){
 return;
 }
-
-alert(
-'فحص وقت الامتحان:\n'+
-'وقت الجهاز: '+new Date().toISOString()+'\n'+
-'موعد النهاية المحسوب: '+new Date(deadline).toISOString()+'\n'+
-'انتهى الوقت؟ '+(deadline<=Date.now())
-);
 
 const confirmed=confirm(
 'هل أنت متأكد من إرسال إجاباتك؟ لن تتمكن من تعديلها بعد الإرسال.'
