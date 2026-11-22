@@ -226,53 +226,241 @@ async function loadExamQuestions(examId) {
     return true;
 }
 </strong><button type="button" class="danger remove">حذف السؤال</button></div><label>نص السؤال<textarea class="qtext" required></textarea></label><label>العلامة<input class="points" type="number" min="0.25" step="0.25" value="1" required></label>${type==='mcq'?`<div class="options">${[1,2,3,4].map(n=>`<label class="option-row"><input class="opt" placeholder="الاختيار ${n}" required><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="radio" name="correct_${id}" value="${n-1}" ${n===1?'checked':''} style="width:auto"> صحيحة</label></label>`).join('')}</div>`:'<p style="color:#7183a2">تظهر الإجابة للأستاذ للتصحيح اليدوي بعد تسليم الطالب.</p>'}`;box.querySelector('.remove').addEventListener('click',()=>box.remove());$('questions').appendChild(box);}
-async function saveExam(e){e.preventDefault();if(!await teacher()){status('save-status','انتهت الجلسة أو لا تملك الصلاحية.');return;}const blocks=[...$('questions').querySelectorAll('.question-editor')];if(!blocks.length){status('save-status','أضف سؤالاً واحداً على الأقل قبل الحفظ.');return;}const btn=$('save-exam');btn.disabled=true;const payload={title:$('exam-title').value.trim(),description:$('exam-desc').value.trim(),duration_minutes:Number($('duration').value),is_published:$('published').checked,starts_at:$('starts').value?new Date($('starts').value).toISOString():null,ends_at:$('ends').value?new Date($('ends').value).toISOString():null};let exam;
 
-if (editingExamId) {
-    const { data, error } = await db
-        .from('exams')
-        .update(payload)
-        .eq('id', editingExamId)
-        .select()
-        .single();
+async function saveExam(e) {
+    e.preventDefault();
 
-    if (error) {
-        status('save-status', 'تعذر تعديل الامتحان: ' + error.message);
-        btn.disabled = false;
+    if (!await teacher()) {
+        status('save-status', 'انتهت الجلسة أو لا تملك الصلاحية.');
         return;
     }
 
-    exam = data;
+    const btn = $('save-exam');
+    btn.disabled = true;
 
-    status('save-status', 'تم تعديل بيانات الامتحان بنجاح.');
-    editingExamId = null;
-    $('exam-form').reset();
-    await loadAdminExams();
-    btn.disabled = false;
-    return;
+    try {
+        const blocks = [
+            ...$('questions').querySelectorAll('.question-editor')
+        ];
 
-} else {
-    const { data, error } = await db
-        .from('exams')
-        .insert(payload)
-        .select()
-        .single();
+        if (!blocks.length) {
+            status('save-status', 'أضف سؤالاً واحداً على الأقل قبل الحفظ.');
+            return;
+        }
 
-    if (error) {
-        status('save-status', 'تعذر إنشاء الامتحان: ' + error.message);
+        const payload = {
+            title: $('exam-title').value.trim(),
+            description: $('exam-desc').value.trim(),
+            duration_minutes: Number($('duration').value),
+            is_published: $('published').checked,
+            starts_at: $('starts').value
+                ? new Date($('starts').value).toISOString()
+                : null,
+            ends_at: $('ends').value
+                ? new Date($('ends').value).toISOString()
+                : null
+        };
+
+        let exam;
+        const isEditing = Boolean(editingExamId);
+
+        if (isEditing) {
+            // التأكد من عدم وجود محاولات للطلبة
+            const { data: attempts, error: ae } = await db
+                .from('exam_attempts')
+                .select('id')
+                .eq('exam_id', editingExamId)
+                .limit(1);
+
+            if (ae) throw ae;
+
+            if (attempts && attempts.length) {
+                throw new Error('لا يمكن تعديل امتحان توجد له محاولات للطلبة.');
+            }
+
+            const { data, error } = await db
+                .from('exams')
+                .update(payload)
+                .eq('id', editingExamId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            exam = data;
+
+        } else {
+            const { data, error } = await db
+                .from('exams')
+                .insert(payload)
+                .select()
+                .single();
+
+            if (error) throw error;
+            exam = data;
+        }
+
+        // جلب الأسئلة الموجودة سابقاً
+        let oldQuestions = [];
+
+        if (isEditing) {
+            const { data, error } = await db
+                .from('exam_questions')
+                .select('id')
+                .eq('exam_id', exam.id);
+
+            if (error) throw error;
+            oldQuestions = data || [];
+        }
+
+        const keptIds = blocks
+            .map(b => b.dataset.questionId)
+            .filter(Boolean);
+
+        // حذف الأسئلة التي أزيلت من النموذج
+        for (const oldQ of oldQuestions) {
+            if (!keptIds.includes(String(oldQ.id))) {
+
+                let result = await db
+                    .from('exam_answer_keys')
+                    .delete()
+                    .eq('question_id', oldQ.id);
+
+                if (result.error) throw result.error;
+
+                result = await db
+                    .from('exam_options')
+                    .delete()
+                    .eq('question_id', oldQ.id);
+
+                if (result.error) throw result.error;
+
+                result = await db
+                    .from('exam_questions')
+                    .delete()
+                    .eq('id', oldQ.id);
+
+                if (result.error) throw result.error;
+            }
+        }
+
+        // حفظ الأسئلة الموجودة والجديدة
+        for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            const type = b.dataset.type;
+
+            const questionPayload = {
+                exam_id: exam.id,
+                question_text: b.querySelector('.qtext').value.trim(),
+                question_type: type,
+                points: Number(b.querySelector('.points').value),
+                position: i + 1
+            };
+
+            let q;
+
+            if (b.dataset.questionId) {
+                const { data, error } = await db
+                    .from('exam_questions')
+                    .update(questionPayload)
+                    .eq('id', b.dataset.questionId)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                q = data;
+
+            } else {
+                const { data, error } = await db
+                    .from('exam_questions')
+                    .insert(questionPayload)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                q = data;
+            }
+
+            // حذف الاختيارات ومفتاح الإجابة القديمين
+            let result = await db
+                .from('exam_answer_keys')
+                .delete()
+                .eq('question_id', q.id);
+
+            if (result.error) throw result.error;
+
+            result = await db
+                .from('exam_options')
+                .delete()
+                .eq('question_id', q.id);
+
+            if (result.error) throw result.error;
+
+            // إعادة حفظ الاختيارات والإجابة الصحيحة
+            if (type === 'mcq') {
+                const vals = [
+                    ...b.querySelectorAll('.opt')
+                ].map(x => x.value.trim());
+
+                if (vals.length !== 4 || vals.some(v => !v)) {
+                    throw new Error('يجب ملء الاختيارات الأربعة لكل سؤال اختيار من متعدد.');
+                }
+
+                const checked = b.querySelector(
+                    'input[type="radio"]:checked'
+                );
+
+                if (!checked) {
+                    throw new Error('حدد الإجابة الصحيحة لكل سؤال.');
+                }
+
+                const { data: opts, error: oe } = await db
+                    .from('exam_options')
+                    .insert(vals.map((option_text, j) => ({
+                        question_id: q.id,
+                        option_text,
+                        position: j + 1
+                    })))
+                    .select();
+
+                if (oe) throw oe;
+
+                const correct = Number(checked.value);
+
+                const { error: ke } = await db
+                    .from('exam_answer_keys')
+                    .insert({
+                        question_id: q.id,
+                        correct_option_id: opts[correct].id
+                    });
+
+                if (ke) throw ke;
+            }
+
+            // الاحتفاظ بمعرف السؤال بعد الحفظ
+            b.dataset.questionId = q.id;
+        }
+
+        status(
+            'save-status',
+            isEditing
+                ? 'تم تعديل الامتحان وأسئلته بنجاح.'
+                : 'تم إنشاء الامتحان وأسئلته بنجاح.'
+        );
+
+        editingExamId = null;
+        $('exam-form').reset();
+        $('questions').innerHTML = '';
+
+        await loadAdminExams();
+
+    } catch (error) {
+        status('save-status', 'حدث خطأ أثناء الحفظ: ' + error.message);
+
+    } finally {
         btn.disabled = false;
-        return;
     }
-
-    exam = data;
-}for(let i=0;i<blocks.length;i++){const b=blocks[i],type=b.dataset.type;const {data:q,error:qe}=await db.from('exam_questions').insert({exam_id:exam.id,question_text:b.querySelector('.qtext').value.trim(),question_type:type,points:Number(b.querySelector('.points').value),position:i+1}).select().single();if(qe){status('save-status','تم إنشاء الامتحان، لكن حدث خطأ عند حفظ سؤال: '+qe.message+'؛ احذف المسودة أو أكملها.');btn.disabled=false;return;}if(type==='mcq'){const vals=[...b.querySelectorAll('.opt')].map(x=>x.value.trim());const {data:opts,error:oe}=await db.from('exam_options').insert(vals.map((option_text,j)=>({question_id:q.id,option_text,position:j+1}))).select();if(oe){status('save-status','خطأ في حفظ الاختيارات: '+oe.message);btn.disabled=false;return;}const correct=Number(b.querySelector('input[type=radio]:checked').value);const {error:ke}=await db.from('exam_answer_keys').insert({question_id:q.id,correct_option_id:opts[correct].id});if(ke){status('save-status','خطأ في حفظ مفتاح الإجابة: '+ke.message);btn.disabled=false;return;}}}status('save-status','تم حفظ الامتحان وأسئلته بنجاح.');
-editingExamId = null;
-$('exam-form').reset();
-$('questions').innerHTML='';
-await loadAdminExams();
-btn.disabled=false;
 }
-function toLocalDateTime(value) {
+ {
     if (!value) return '';
 
     const d = new Date(value);
