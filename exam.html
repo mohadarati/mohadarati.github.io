@@ -326,25 +326,12 @@ if(!Number.isFinite(duration)||duration<=0){
     return;
 }
 
-deadline=startedAt+duration*60000;
-alert(
-  'المدة بالدقائق: '+duration+
-  '\nبداية المحاولة ISO: '+new Date(startedAt).toISOString()+
-  '\nوقت الجهاز ISO: '+new Date().toISOString()+
-  '\nالنهاية ISO: '+new Date(deadline).toISOString()+
-  '\nالمتبقي بالثواني: '+Math.floor((deadline-Date.now())/1000)
-);
+المدة بالدقائق
 if(deadline<=Date.now()){
-    alert(
-        'انتهى الوقت حسب حساب المتصفح.\n'+
-        'وقت البداية: '+attempt.started_at+'\n'+
-        'المدة بالدقائق: '+duration+'\n'+
-        'موعد النهاية: '+new Date(deadline).toISOString()+'\n'+
-        'وقت الجهاز: '+new Date().toISOString()
-    );
     await loadExams();
     showOnly('student-view');
     return;
+}
 }
 currentAttempt = attemptId;
 currentExam = exam;
