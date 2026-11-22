@@ -491,8 +491,6 @@ async function editExam(id) {
         alert('تعذر تحميل بيانات الامتحان: ' + error.message);
         return;
     }
-
-    editingExamId = data.id;
     // منع تعديل الامتحان إذا كانت له محاولات سابقة
 const { data: attempts, error: attemptsError } = await db
     .from('exam_attempts')
