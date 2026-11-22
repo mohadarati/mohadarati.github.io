@@ -153,7 +153,79 @@ const SUPABASE_URL='https://gbcpjzzxebzlhscdsugz.supabase.co',SUPABASE_KEY='sb_p
 function status(id,msg){$(id).textContent=msg;$(id).classList.remove('hidden')}
 async function teacher(){const {data,error}=await db.rpc('is_teacher');return !error&&data===true}
 async function login(e){e.preventDefault();const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){status('login-status','فشل الدخول: '+error.message);return;}if(!await teacher()){await db.auth.signOut();status('login-status','هذا الحساب ليس حساب أستاذ معتمداً.');return;}$('login-panel').classList.add('hidden');$('manager').classList.remove('hidden');await loadAdminExams();}$('login-form').addEventListener('submit', login);
-function addQuestion(type){qcount++;const id='qe'+qcount;const box=document.createElement('div');box.className='question-editor';box.dataset.type=type;box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><strong>${type==='mcq'?'سؤال اختيار من متعدد':'سؤال كتابي'}</strong><button type="button" class="danger remove">حذف السؤال</button></div><label>نص السؤال<textarea class="qtext" required></textarea></label><label>العلامة<input class="points" type="number" min="0.25" step="0.25" value="1" required></label>${type==='mcq'?`<div class="options">${[1,2,3,4].map(n=>`<label class="option-row"><input class="opt" placeholder="الاختيار ${n}" required><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="radio" name="correct_${id}" value="${n-1}" ${n===1?'checked':''} style="width:auto"> صحيحة</label></label>`).join('')}</div>`:'<p style="color:#7183a2">تظهر الإجابة للأستاذ للتصحيح اليدوي بعد تسليم الطالب.</p>'}`;box.querySelector('.remove').addEventListener('click',()=>box.remove());$('questions').appendChild(box);}
+function addQuestion(type){qcount++;const id='qe'+qcount;const box=document.createElement('div');box.className='question-editor';box.dataset.type = type;box.dataset.questionId = '';box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><strong>${type==='mcq'?'سؤال اختيار من متعدد':'سؤال كتابي'}
+async function loadExamQuestions(examId) {
+    $('questions').innerHTML = '';
+
+    const { data: questions, error } = await db
+        .from('exam_questions')
+        .select('*')
+        .eq('exam_id', examId)
+        .order('position', { ascending: true });
+
+    if (error) {
+        alert('تعذر تحميل الأسئلة: ' + error.message);
+        return false;
+    }
+
+    for (const q of questions || []) {
+        addQuestion(q.question_type);
+
+        const box = $('questions').lastElementChild;
+
+        box.dataset.questionId = q.id;
+        box.querySelector('.qtext').value = q.question_text || '';
+        box.querySelector('.points').value = q.points || 1;
+
+        if (q.question_type === 'mcq') {
+            const { data: options, error: oe } = await db
+                .from('exam_options')
+                .select('*')
+                .eq('question_id', q.id)
+                .order('position', { ascending: true });
+
+            if (oe) {
+                alert('تعذر تحميل الاختيارات: ' + oe.message);
+                return false;
+            }
+
+            const { data: key, error: ke } = await db
+                .from('exam_answer_keys')
+                .select('correct_option_id')
+                .eq('question_id', q.id)
+                .maybeSingle();
+
+            if (ke) {
+                alert('تعذر تحميل الإجابة الصحيحة: ' + ke.message);
+                return false;
+            }
+
+            const inputs = [...box.querySelectorAll('.opt')];
+
+            (options || []).forEach((opt, index) => {
+                if (inputs[index]) {
+                    inputs[index].value = opt.option_text || '';
+                    inputs[index].dataset.optionId = opt.id;
+                }
+            });
+
+            if (key) {
+                const correctIndex = (options || []).findIndex(
+                    opt => opt.id === key.correct_option_id
+                );
+
+                const radio = box.querySelector(
+                    `input[type="radio"][value="${correctIndex}"]`
+                );
+
+                if (radio) radio.checked = true;
+            }
+        }
+    }
+
+    return true;
+}
+</strong><button type="button" class="danger remove">حذف السؤال</button></div><label>نص السؤال<textarea class="qtext" required></textarea></label><label>العلامة<input class="points" type="number" min="0.25" step="0.25" value="1" required></label>${type==='mcq'?`<div class="options">${[1,2,3,4].map(n=>`<label class="option-row"><input class="opt" placeholder="الاختيار ${n}" required><label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="radio" name="correct_${id}" value="${n-1}" ${n===1?'checked':''} style="width:auto"> صحيحة</label></label>`).join('')}</div>`:'<p style="color:#7183a2">تظهر الإجابة للأستاذ للتصحيح اليدوي بعد تسليم الطالب.</p>'}`;box.querySelector('.remove').addEventListener('click',()=>box.remove());$('questions').appendChild(box);}
 async function saveExam(e){e.preventDefault();if(!await teacher()){status('save-status','انتهت الجلسة أو لا تملك الصلاحية.');return;}const blocks=[...$('questions').querySelectorAll('.question-editor')];if(!blocks.length){status('save-status','أضف سؤالاً واحداً على الأقل قبل الحفظ.');return;}const btn=$('save-exam');btn.disabled=true;const payload={title:$('exam-title').value.trim(),description:$('exam-desc').value.trim(),duration_minutes:Number($('duration').value),is_published:$('published').checked,starts_at:$('starts').value?new Date($('starts').value).toISOString():null,ends_at:$('ends').value?new Date($('ends').value).toISOString():null};let exam;
 
 if (editingExamId) {
