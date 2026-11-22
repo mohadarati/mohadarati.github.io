@@ -305,7 +305,32 @@ async function editExam(id) {
     }
 
     editingExamId = data.id;
+    // منع تعديل الامتحان إذا كانت له محاولات سابقة
+const { data: attempts, error: attemptsError } = await db
+    .from('exam_attempts')
+    .select('id')
+    .eq('exam_id', id)
+    .limit(1);
 
+if (attemptsError) {
+    alert('تعذر التحقق من محاولات الطلبة: ' + attemptsError.message);
+    return;
+}
+
+if (attempts && attempts.length > 0) {
+    alert('لا يمكن تعديل هذا الامتحان لأنه يحتوي على محاولات للطلبة.');
+    return;
+}
+
+editingExamId = data.id;
+
+// تحميل الأسئلة والاختيارات القديمة
+const loaded = await loadExamQuestions(id);
+
+if (!loaded) {
+    editingExamId = null;
+    return;
+}
     $('exam-title').value = data.title || '';
     $('exam-desc').value = data.description || '';
     $('duration').value = data.duration_minutes || 60;
