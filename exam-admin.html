@@ -608,28 +608,53 @@ async function loadLiveAttempts() {
     return;
   }
 
-  const now = Date.now();
-  box.innerHTML = filtered.map(a => {
-    const s = a.student_profiles;
-    const name = (s.last_name || '') + ' ' + (s.first_name || '');
-    const elapsedMin = a.started_at ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000)) : 0;
-    const over = durationMin > 0 && elapsedMin > durationMin;
-    const remaining = durationMin > 0 ? Math.max(0, durationMin - elapsedMin) : null;
-    return `
-      <div class="item" style="align-items:flex-start">
-        <div>
-          <strong>${escapeExcelText(name)}</strong><br>
-          <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-          <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
-        </div>
-        <div style="text-align:left">
-          <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${over ? '#fdecec' : '#eaf1ff'};color:${over ? '#b42318' : '#155eef'}">
-            ${over ? `تجاوز المدة (${elapsedMin} د)` : (remaining !== null ? `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د` : `منقضٍ ${elapsedMin} د`)}
-          </span>
-        </div>
-      </div>`;
-  }).join('');
-}
+ const now = Date.now();
+box.innerHTML = filtered.map(a => {
+  const s = a.student_profiles;
+  const name = (s.last_name || '') + ' ' + (s.first_name || '');
+
+  // الوقت المنقضي منذ بدء المحاولة
+  const elapsedMin = a.started_at
+    ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000))
+    : 0;
+
+  // هل انتهت المدة المسموحة؟
+  const timeIsUp = durationMin > 0 && elapsedMin >= durationMin;
+
+  // الوقت المتبقي (لا يقل عن صفر)
+  const remaining = durationMin > 0
+    ? Math.max(0, durationMin - elapsedMin)
+    : null;
+
+  // النص المعروض
+  let timeLabel;
+  if (timeIsUp) {
+    // عند انتهاء الوقت: لا نعرض عدد الدقائق المتجاوزة
+    timeLabel = 'انتهى الوقت';
+  } else if (remaining !== null) {
+    timeLabel = `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د`;
+  } else {
+    timeLabel = `منقضٍ ${elapsedMin} د`;
+  }
+
+  // الألوان
+  const bgColor = timeIsUp ? '#fdecec' : '#eaf1ff';
+  const fgColor = timeIsUp ? '#b42318' : '#155eef';
+
+  return `
+    <div class="item" style="align-items:flex-start">
+      <div>
+        <strong>${escapeExcelText(name)}</strong><br>
+        <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
+        <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
+      </div>
+      <div style="text-align:left">
+        <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${bgColor};color:${fgColor}">
+          ${timeLabel}
+        </span>
+      </div>
+    </div>`;
+}).join('');
 
 function startLiveAutoRefresh() {
   if (liveTimer) clearInterval(liveTimer);
