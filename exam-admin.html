@@ -542,27 +542,55 @@ async function saveEditExam(e) {
   const { error: de } = await db.from('exam_questions').delete().eq('exam_id', editingExamId);
   if (de) { status('edit-status', 'تعذر حذف الأسئلة القديمة: ' + de.message); btn.disabled = false; return; }
   
+  
   for (let i = 0; i < blocks.length; i++) {
-    const b = blocks[i], type = b.dataset.type;
-    const { data: q, error: qe } = await db.from('exam_questions').insert({
-      exam_id: editingExamId,
-      question_text: b.querySelector('.qtext').value.trim(),
-      question_type: type,
-      points: Number(b.querySelector('.points').value),
-      position: i + 1
-    }).select().single();
-    if (qe) { status('edit-status', 'خطأ عند حفظ سؤال: ' + qe.message); btn.disabled = false; return; }
+    const b = blocks[i];
+    const type = b.dataset.type;
+
+    const { data: q, error: qe } = await db
+      .from('exam_questions')
+      .insert({
+        exam_id: editingExamId,
+        question_text: b.querySelector('.qtext').value.trim(),
+        question_type: type,
+        points: Number(b.querySelector('.points').value),
+        position: i + 1
+      })
+      .select()
+      .single();
+
+    if (qe) {
+      status('edit-status', 'خطأ عند حفظ سؤال: ' + qe.message);
+      btn.disabled = false;
+      return;
+    }
+
     if (type === 'mcq') {
       const vals = [...b.querySelectorAll('.opt')].map(x => x.value.trim());
-      const { data: opts, error: oe } = await db.from('exam_options')
+      const { data: opts, error: oe } = await db
+        .from('exam_options')
         .insert(vals.map((option_text, j) => ({ question_id: q.id, option_text, position: j + 1 })))
         .select();
-      if (oe) { status('edit-status', 'خطأ في الاختيارات: ' + oe.message); btn.disabled = false; return; }
+
+      if (oe) {
+        status('edit-status', 'خطأ في الاختيارات: ' + oe.message);
+        btn.disabled = false;
+        return;
+      }
+
       const correct = Number(b.querySelector('input[type=radio]:checked').value);
-      const { error: ke } = await db.from('exam_answer_keys').insert({ question_id: q.id, correct_option_id: opts[correct].id });
-      if (ke) { status('edit-status', 'خطأ في مفتاح الإجابة: ' + ke.message); btn.disabled = false; return; }
+      const { error: ke } = await db
+        .from('exam_answer_keys')
+        .insert({ question_id: q.id, correct_option_id: opts[correct].id });
+
+      if (ke) {
+        status('edit-status', 'خطأ في مفتاح الإجابة: ' + ke.message);
+        btn.disabled = false;
+        return;
+      }
     }
   }
+
   status('edit-status', 'تم حفظ التعديلات بنجاح.');
   await loadAdminExams();
   btn.disabled = false;
@@ -608,53 +636,45 @@ async function loadLiveAttempts() {
     return;
   }
 
- const now = Date.now();
-box.innerHTML = filtered.map(a => {
-  const s = a.student_profiles;
-  const name = (s.last_name || '') + ' ' + (s.first_name || '');
+  const now = Date.now();
+  box.innerHTML = filtered.map(a => {
+    const s = a.student_profiles;
+    const name = (s.last_name || '') + ' ' + (s.first_name || '');
 
-  // الوقت المنقضي منذ بدء المحاولة
-  const elapsedMin = a.started_at
-    ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000))
-    : 0;
+    const elapsedMin = a.started_at
+      ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000))
+      : 0;
 
-  // هل انتهت المدة المسموحة؟
-  const timeIsUp = durationMin > 0 && elapsedMin >= durationMin;
+    const timeIsUp = durationMin > 0 && elapsedMin >= durationMin;
+    const remaining = durationMin > 0 ? Math.max(0, durationMin - elapsedMin) : null;
 
-  // الوقت المتبقي (لا يقل عن صفر)
-  const remaining = durationMin > 0
-    ? Math.max(0, durationMin - elapsedMin)
-    : null;
+    let timeLabel;
+    if (timeIsUp) {
+      timeLabel = 'انتهى الوقت';
+    } else if (remaining !== null) {
+      timeLabel = `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د`;
+    } else {
+      timeLabel = `منقضٍ ${elapsedMin} د`;
+    }
 
-  // النص المعروض
-  let timeLabel;
-  if (timeIsUp) {
-    // عند انتهاء الوقت: لا نعرض عدد الدقائق المتجاوزة
-    timeLabel = 'انتهى الوقت';
-  } else if (remaining !== null) {
-    timeLabel = `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د`;
-  } else {
-    timeLabel = `منقضٍ ${elapsedMin} د`;
-  }
+    const bgColor = timeIsUp ? '#fdecec' : '#eaf1ff';
+    const fgColor = timeIsUp ? '#b42318' : '#155eef';
 
-  // الألوان
-  const bgColor = timeIsUp ? '#fdecec' : '#eaf1ff';
-  const fgColor = timeIsUp ? '#b42318' : '#155eef';
-
-  return `
-    <div class="item" style="align-items:flex-start">
-      <div>
-        <strong>${escapeExcelText(name)}</strong><br>
-        <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-        <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
-      </div>
-      <div style="text-align:left">
-        <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${bgColor};color:${fgColor}">
-          ${timeLabel}
-        </span>
-      </div>
-    </div>`;
-}).join('');
+    return `
+      <div class="item" style="align-items:flex-start">
+        <div>
+          <strong>${escapeExcelText(name)}</strong><br>
+          <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
+          <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
+        </div>
+        <div style="text-align:left">
+          <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${bgColor};color:${fgColor}">
+            ${timeLabel}
+          </span>
+        </div>
+      </div>`;
+  }).join('');
+}
 
 function startLiveAutoRefresh() {
   if (liveTimer) clearInterval(liveTimer);
@@ -684,7 +704,8 @@ async function saveManualGrade(answerId) {
   const input = $('score-' + answerId);
   const score = Number(input.value);
   if (input.value.trim() === '' || !Number.isFinite(score) || score < 0) {
-    alert('يرجى إدخال علامة صحيحة.'); return;
+    alert('يرجى إدخال علامة صحيحة.');
+    return;
   }
   const btn = input.parentElement.querySelector('button');
   btn.disabled = true;
@@ -780,7 +801,8 @@ async function exportResultsExcel() {
   const examId = $('results-exam').value;
   if (!examId) { status('export-status', 'يرجى اختيار الامتحان أولاً.'); return; }
   if (typeof XLSX === 'undefined') { status('export-status', 'تعذر تحميل مكتبة Excel.'); return; }
-  const btn = $('export-results'); btn.disabled = true;
+  const btn = $('export-results');
+  btn.disabled = true;
   try {
     if (!await teacher()) { status('export-status', 'انتهت الجلسة أو لا تملك الصلاحية.'); return; }
     status('export-status', 'جارٍ تجهيز ملف النتائج...');
@@ -831,7 +853,9 @@ async function exportResultsExcel() {
       (incompleteCount ? ' — لم تُدرج ' + incompleteCount + ' محاولة غير مكتملة التصحيح.' : ''));
   } catch (err) {
     status('export-status', 'حدث خطأ أثناء التصدير: ' + (err.message || String(err)));
-  } finally { btn.disabled = false; }
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function createStudent(e) {
@@ -846,7 +870,8 @@ async function createStudent(e) {
   if (!/^[0-9]{8}$/.test(registrationNumber)) { status('student-status', 'رقم التسجيل يجب أن يتكون من 8 أرقام.'); return; }
   if (!firstName || !lastName) { status('student-status', 'يرجى إدخال الاسم واللقب.'); return; }
   if (password.length < 8) { status('student-status', 'كلمة المرور يجب ألا تقل عن 8 أحرف.'); return; }
-  const btn = $('create-student'); btn.disabled = true;
+  const btn = $('create-student');
+  btn.disabled = true;
   status('student-status', 'جارٍ إنشاء الحساب...');
   try {
     const { data, error } = await db.functions.invoke('create-student', {
@@ -856,8 +881,11 @@ async function createStudent(e) {
     if (data?.error) { status('student-status', 'تعذر إنشاء الحساب: ' + data.error); return; }
     $('student-form').reset();
     status('student-status', 'تم إنشاء حساب الطالب: ' + lastName + ' ' + firstName + ' — رقم الدخول: ' + registrationNumber);
-  } catch (error) { status('student-status', 'حدث خطأ: ' + error.message); }
-  finally { btn.disabled = false; }
+  } catch (error) {
+    status('student-status', 'حدث خطأ: ' + error.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function resetStudentPassword(e) {
@@ -869,7 +897,8 @@ async function resetStudentPassword(e) {
   if (!/^[0-9]{8}$/.test(registration)) { status('reset-password-status', 'رقم التسجيل يجب أن يتكون من 8 أرقام.'); return; }
   if (password.length < 8) { status('reset-password-status', 'كلمة المرور يجب ألا تقل عن 8 أحرف.'); return; }
   if (password !== confirmation) { status('reset-password-status', 'كلمتا المرور غير متطابقتين.'); return; }
-  const btn = $('reset-password-button'); btn.disabled = true;
+  const btn = $('reset-password-button');
+  btn.disabled = true;
   status('reset-password-status', 'جارٍ تغيير كلمة المرور...');
   try {
     const { data, error } = await db.functions.invoke('bright-responder', {
@@ -879,8 +908,11 @@ async function resetStudentPassword(e) {
     if (data?.error) { status('reset-password-status', data.error); return; }
     $('reset-password-form').reset();
     status('reset-password-status', 'تم تغيير كلمة مرور الطالب بنجاح.');
-  } catch (err) { status('reset-password-status', 'حدث خطأ: ' + err.message); }
-  finally { btn.disabled = false; }
+  } catch (err) {
+    status('reset-password-status', 'حدث خطأ: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function importStudentsExcel() {
@@ -902,9 +934,11 @@ async function importStudentsExcel() {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
     if (!rows.length) { status('excel-status', 'الملف فارغ أو لا يحتوي على بيانات.'); return; }
+
     function normalizeHeader(value) {
       return String(value || '').trim().replace(/\s+/g, '').replace(/[أإآ]/g, 'ا');
     }
+
     const headers = Object.keys(rows[0]);
     const columns = {};
     for (const h of headers) {
@@ -914,13 +948,17 @@ async function importStudentsExcel() {
       if (key === 'رقمالتسجيل') columns.registration = h;
       if (key === 'كلمةالسر') columns.password = h;
     }
+
     if (!columns.firstName || !columns.lastName || !columns.registration || !columns.password) {
-      status('excel-status', 'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.'); return;
+      status('excel-status', 'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.');
+      return;
     }
+
     const seen = new Set();
     const errors = [];
     let success = 0;
     status('excel-status', 'تمت قراءة ' + rows.length + ' صفاً. جارٍ إنشاء الحسابات...');
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const firstName = String(row[columns.firstName] ?? '').trim();
@@ -928,11 +966,13 @@ async function importStudentsExcel() {
       const registrationNumber = String(row[columns.registration] ?? '').trim().replace(/\.0$/, '');
       const password = String(row[columns.password] ?? '').trim();
       const excelRow = i + 2;
+
       if (!firstName || !lastName) { errors.push('السطر ' + excelRow + ': الاسم أو اللقب فارغ.'); continue; }
       if (!/^[0-9]{8}$/.test(registrationNumber)) { errors.push('السطر ' + excelRow + ': رقم التسجيل يجب أن يتكون من 8 أرقام.'); continue; }
       if (password.length < 8) { errors.push('السطر ' + excelRow + ': كلمة السر أقل من 8 أحرف.'); continue; }
       if (seen.has(registrationNumber)) { errors.push('السطر ' + excelRow + ': رقم التسجيل مكرر داخل الملف.'); continue; }
       seen.add(registrationNumber);
+
       try {
         const { data, error } = await db.functions.invoke('create-student', {
           body: { first_name: firstName, last_name: lastName, group_number: groupNumber, registration_number: registrationNumber, password }
@@ -945,6 +985,7 @@ async function importStudentsExcel() {
       }
       status('excel-status', 'تقدم الاستيراد: ' + (i + 1) + ' من ' + rows.length + ' — تم إنشاء ' + success + ' حساباً.');
     }
+
     let report = `<div class="status"><strong>انتهى الاستيراد</strong><br>عدد الصفوف: ${rows.length}<br>الحسابات المنشأة بنجاح: ${success}<br>الصفوف التي تعذر استيرادها: ${errors.length}</div>`;
     if (errors.length) {
       const errorItems = errors.map(e => '<li>' + escapeExcelText(e) + '</li>').join('');
@@ -953,8 +994,11 @@ async function importStudentsExcel() {
     reportBox.innerHTML = report;
     status('excel-status', 'اكتمل الاستيراد. الحسابات المنشأة: ' + success + '، الأخطاء: ' + errors.length);
     if (success > 0) fileInput.value = '';
-  } catch (err) { status('excel-status', 'تعذر قراءة الملف: ' + err.message); }
-  finally { btn.disabled = false; }
+  } catch (err) {
+    status('excel-status', 'تعذر قراءة الملف: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 $('import-students').addEventListener('click', importStudentsExcel);
