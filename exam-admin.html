@@ -637,44 +637,69 @@ async function loadLiveAttempts() {
   }
 
   const now = Date.now();
-  box.innerHTML = filtered.map(a => {
+    box.innerHTML = filtered.map(a => {
     const s = a.student_profiles;
-    const name = (s.last_name || '') + ' ' + (s.first_name || '');
+    const studentName = (s.last_name || '') + ' ' + (s.first_name || '');
+    const written = answersByAttempt.get(a.id) || [];
 
-    const elapsedMin = a.started_at
-      ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000))
-      : 0;
-
-    const timeIsUp = durationMin > 0 && elapsedMin >= durationMin;
-    const remaining = durationMin > 0 ? Math.max(0, durationMin - elapsedMin) : null;
-
-    let timeLabel;
-    if (timeIsUp) {
-      timeLabel = 'انتهى الوقت';
-    } else if (remaining !== null) {
-      timeLabel = `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د`;
-    } else {
-      timeLabel = `منقضٍ ${elapsedMin} د`;
-    }
-
-    const bgColor = timeIsUp ? '#fdecec' : '#eaf1ff';
-    const fgColor = timeIsUp ? '#b42318' : '#155eef';
+    // العلامة الكلية = الآلية + اليدوية
+    const totalScore = Number(a.objective_score || 0) + Number(a.manual_score || 0);
+    const pending = Number(a.pending_points || 0);
 
     return `
-      <div class="item" style="align-items:flex-start">
-        <div>
-          <strong>${escapeExcelText(name)}</strong><br>
-          <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-          <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
+      <article class="item" style="display:block;margin:12px 0;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div>
+            <h3 style="margin:0 0 6px">${escapeExcelText(studentName)}</h3>
+            <small style="color:#7183a2">رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
+            <small style="color:#7183a2">${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}</small>
+          </div>
+          <div style="text-align:center;background:#eaf1ff;padding:10px 18px;border-radius:12px;min-width:100px">
+            <div style="font-size:12px;color:#7183a2;margin-bottom:4px">العلامة</div>
+            <div style="font-size:26px;font-weight:800;color:#155eef;line-height:1">
+              ${totalScore}${pending > 0 ? ' *' : ''}
+            </div>
+            ${pending > 0 ? `<div style="font-size:11px;color:#b42318;margin-top:4px">* بانتظار التصحيح</div>` : ''}
+          </div>
         </div>
-        <div style="text-align:left">
-          <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${bgColor};color:${fgColor}">
-            ${timeLabel}
-          </span>
+
+        <div style="margin-top:14px">
+          <button type="button" class="secondary" onclick="reopenStudentExam('${examId}', '${a.student_id}')">إعادة فتح الامتحان لهذا الطالب</button>
         </div>
-      </div>`;
+
+        ${written.length ? `
+          <details style="margin-top:14px;background:#f4f7fc;padding:10px;border-radius:10px">
+            <summary style="cursor:pointer;font-weight:bold;color:#173b76">
+              الإجابات الكتابية (${written.length}) — اضغط للتصحيح
+            </summary>
+            <div style="margin-top:10px">
+              ${written.map(ans => {
+                const q = questionMap.get(ans.question_id);
+                return `
+                  <div style="background:white;padding:12px;margin:10px 0;border-radius:10px;border:1px solid #e3eaf5">
+                    <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
+                    <p style="color:#172b4d">${escapeExcelText(ans.written_answer || '')}</p>
+                    <div style="margin-top:10px">
+                      <label style="display:block;margin-bottom:6px;font-weight:bold;font-size:13px">
+                        العلامة الممنوحة (من ${Number(q?.points || 0)})
+                      </label>
+                      <div style="display:flex;gap:8px;align-items:center">
+                        <input type="number" class="manual-score-input" id="score-${ans.id}"
+                          min="0" max="${Number(q?.points || 0)}" step="0.25"
+                          value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
+                          placeholder="من ${Number(q?.points || 0)}"
+                          style="flex:1;padding:10px;margin:0">
+                        <button type="button" class="secondary" onclick="saveManualGrade('${ans.id}')">حفظ</button>
+                      </div>
+                      <small style="color:#7183a2">${ans.graded_at ? '✓ تم التصحيح' : '⏳ بانتظار التصحيح'}</small>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </details>
+        ` : ''}
+      </article>`;
   }).join('');
-}
 
 function startLiveAutoRefresh() {
   if (liveTimer) clearInterval(liveTimer);
