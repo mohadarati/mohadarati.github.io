@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -185,6 +184,41 @@ footer{background:#eaf1ff;color:#5f7395;border-top:1px solid #dce7f8;text-align:
 .lecture-actions{
     flex-shrink:0;
 }
+/* ✅ تنسيق المؤقت التنازلي */
+.countdown-timer {
+    background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+    border: 2px solid #e0a12e;
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #7a4f01;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.countdown-label {
+    color: #b7791f;
+}
+
+#countdown-display {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 800;
+    color: #d32f2f;
+    letter-spacing: 1px;
+}
+
+.countdown-expired {
+    color: #d32f2f !important;
+    font-size: 15px !important;
+    font-weight: 800;
+}
 </style>
 </head>
 <body>
@@ -202,6 +236,13 @@ footer{background:#eaf1ff;color:#5f7395;border-top:1px solid #dce7f8;text-align:
 <!-- لوحة إعلانات الأستاذ -->
 <div class="announcements-box" id="announcements">
     <h2>📢 إعلانات الأستاذ</h2>
+    
+    <!-- ✅ المؤقت التنازلي -->
+    <div id="countdown-timer" class="countdown-timer">
+        <span class="countdown-label">⏳ الوقت المتبقي:</span>
+        <span id="countdown-display">جارٍ التحميل...</span>
+    </div>
+    
     <div id="announcements-list">
         جاري تحميل الإعلانات...
     </div>
@@ -365,6 +406,38 @@ async function loadResearch(){
  box.innerHTML=data.map(x=>`<div class="row"><div><strong>${esc(x.title)}</strong>${x.description?`<small>${esc(x.description)}</small>`:''}</div><div class="row-side"><span class="date-badge">${x.due_date?esc(new Date(x.due_date+'T00:00:00').toLocaleDateString('ar-DZ')):'—'}</span>${x.file_url?`<a href="${esc(x.file_url)}" target="_blank" rel="noopener">اطّلع على الملف</a><a class="secondary" href="${esc(x.file_url)}" target="_blank" rel="noopener" download>تحميل</a>`:''}</div></div>`).join('');
 }
 loadBooks();loadResearch();
+</script>
+
+<!-- ✅ سكربت المؤقت المستقل — يعمل بدون إنترنت -->
+<script>
+(function() {
+    // ⚠️ غيّر التاريخ هنا: (السنة, الشهر-1, اليوم, الساعة, الدقيقة, الثانية)
+    const targetDate = new Date().getTime() + (60 * 60 * 1000);
+
+    function updateCountdown() {
+        const display = document.getElementById('countdown-display');
+        if (!display) return;
+
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+            display.textContent = '⛔ انتهى الوقت!';
+            display.classList.add('countdown-expired');
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        display.textContent = `${days} يوم : ${String(hours).padStart(2,'0')} ساعة : ${String(minutes).padStart(2,'0')} دقيقة : ${String(seconds).padStart(2,'0')} ثانية`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+})();
 </script>
 </body>
 </html>
