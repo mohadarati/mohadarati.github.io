@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -150,7 +149,61 @@ $(x).classList.toggle('hidden',x!==id);
 });
 }
 
-/* تحميل الامتحانات */
+/* ============================================================
+   خلط ثابت لكل طالب (mulberry32 + FNV-1a)
+   ============================================================ */
+
+function mulberry32(seed){
+  let a=seed>>>0;
+  return function(){
+    a|=0; a=(a+0x6D2B79F5)|0;
+    let t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+
+function makeSeed(str){
+  let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){
+    h^=str.charCodeAt(i);
+    h=Math.imul(h,16777619);
+  }
+  return h>>>0;
+}
+
+function seededShuffle(arr,rng){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function orderKey(examId){
+  return 'exam_order_'+examId;
+}
+
+function buildExamOrder(examId,regNumber,questions,shuffleQ,shuffleO){
+  const seed=makeSeed(regNumber+'|'+examId);
+  const rng=mulberry32(seed);
+
+  const orderedQuestions = shuffleQ ? seededShuffle(questions,rng) : questions.slice();
+
+  const optionsOrder={};
+  orderedQuestions.forEach(q=>{
+    const opts=(q.exam_options||[]).slice().sort((a,b)=>a.position-b.position);
+    const ids=opts.map(o=>o.id);
+    optionsOrder[q.id] = shuffleO ? seededShuffle(ids,rng) : ids;
+  });
+
+  return {orderedQuestions,optionsOrder};
+}
+
+/* ============================================================
+   تحميل الامتحانات
+   ============================================================ */
 
 async function loadExams(){
 
@@ -191,9 +244,7 @@ box.textContent='تعذر تحميل سجل المحاولات: '+attemptError.m
 return;
 }
 
-/* الاحتفاظ بأحدث محاولة لكل امتحان */
 const byExam=new Map();
-
 (attempts||[]).forEach(a=>{
 if(!byExam.has(a.exam_id)){
 byExam.set(a.exam_id,a);
@@ -201,15 +252,12 @@ byExam.set(a.exam_id,a);
 });
 
 box.innerHTML=active.map(x=>{
-
 const a=byExam.get(x.id);
-
 return `
 <article class="exam-card">
 <h2>${esc(x.title)}</h2>
 <p>${esc(x.description||'امتحان إلكتروني')}</p>
 <div class="meta">المدة: ${x.duration_minutes} دقيقة</div>
-
 ${
 a?.submitted_at
 ?
@@ -226,10 +274,8 @@ ${a.pending_points>0?' (بانتظار التصحيح)':''}
 ${a?'متابعة الامتحان':'ابدأ الامتحان'}
 </button>`
 }
-
 </article>
 `;
-
 }).join('');
 
 box.querySelectorAll('[data-exam]').forEach(b=>{
@@ -238,7 +284,9 @@ b.addEventListener('click',()=>startExam(b.dataset.exam));
 
 }
 
-/* بدء الامتحان */
+/* ============================================================
+   بدء الامتحان (مع الخلط الثابت)
+   ============================================================ */
 
 async function startExam(id){
 
@@ -252,7 +300,7 @@ hideStatus('attempt-status');
 
 const {data:exam,error:examError}=await db
 .from('exams')
-.select('id,title,description,duration_minutes')
+.select('id,title,description,duration_minutes,shuffle_questions,shuffle_options')
 .eq('id',id)
 .single();
 
@@ -282,6 +330,7 @@ if(!questions||questions.length===0){
 alert('لا يمكن بدء امتحان لا يحتوي على أسئلة.');
 return;
 }
+
 const {data:attemptId,error:startError}=await db.rpc(
 'start_exam',
 {p_exam_id:id}
@@ -337,44 +386,71 @@ if(deadline<=Date.now()){
 
 currentAttempt = attemptId;
 currentExam = exam;
-currentQuestions = questions;
+
+/* رقم تسجيل الطالب من جلسة Supabase */
+const {data:sessionData} = await db.auth.getSession();
+const regNumber = (sessionData?.session?.user?.email || '').split('@')[0] || 'anon';
+
+/* تحديد خيارات الخلط (تتوافق مع غياب الأعمدة) */
+const shuffleQ = exam.shuffle_questions !== false;
+const shuffleO = exam.shuffle_options   !== false;
+
+/* هل يوجد ترتيب محفوظ لهذه المحاولة؟ */
+const key = orderKey(id);
+let savedOrder = null;
+try{
+  const raw = sessionStorage.getItem(key);
+  if(raw) savedOrder = JSON.parse(raw);
+}catch(_){}
+
+let orderedQuestions, optionsOrder;
+
+if(savedOrder && savedOrder.attemptId === attemptId &&
+   Array.isArray(savedOrder.questionIds) && savedOrder.optionsOrder){
+  const mapQ = new Map(questions.map(q=>[q.id,q]));
+  orderedQuestions = savedOrder.questionIds.map(qid=>mapQ.get(qid)).filter(Boolean);
+  questions.forEach(q=>{
+    if(!orderedQuestions.find(x=>x.id===q.id)) orderedQuestions.push(q);
+  });
+  optionsOrder = savedOrder.optionsOrder;
+}else{
+  const built = buildExamOrder(id, regNumber, questions, shuffleQ, shuffleO);
+  orderedQuestions = built.orderedQuestions;
+  optionsOrder = built.optionsOrder;
+  sessionStorage.setItem(key, JSON.stringify({
+    attemptId,
+    questionIds: orderedQuestions.map(q=>q.id),
+    optionsOrder
+  }));
+}
+
+currentQuestions = orderedQuestions;
+
 /* عرض الأسئلة */
+$('question-list').innerHTML = orderedQuestions.map((q,i)=>{
 
-$('question-list').innerHTML=questions.map((q,i)=>{
+if(q.question_type==='mcq'){
+  const opts = q.exam_options || [];
+  const mapOpt = new Map(opts.map(o=>[o.id,o]));
+  const orderedOptIds = optionsOrder[q.id] || opts.map(o=>o.id);
+  const orderedOpts = orderedOptIds.map(oid=>mapOpt.get(oid)).filter(Boolean);
 
-const options=(q.exam_options||[])
-.sort((a,b)=>a.position-b.position);
+  return `
+<article class="question">
+<h3>${i+1}. ${esc(q.question_text)} <small>(${q.points} نقطة)</small></h3>
+${orderedOpts.map(o=>`
+<label class="option">
+<input type="radio" name="q_${q.id}" value="${esc(o.id)}">
+<span>${esc(o.option_text)}</span>
+</label>`).join('')}
+</article>`;
+}
 
 return `
 <article class="question">
-
-<h3>
-${i+1}. ${esc(q.question_text)}
-<small>(${q.points} نقطة)</small>
-</h3>
-
-${
-q.question_type==='mcq'
-?
-options.map(o=>`
-<label class="option">
-<input type="radio"
-name="q_${q.id}"
-value="${esc(o.id)}">
-<span>${esc(o.option_text)}</span>
-</label>
-`).join('')
-:
-`
-<textarea
-name="q_${q.id}"
-placeholder="اكتب إجابتك هنا…"></textarea>
-`
-}
-
-</article>
-`;
-
+<h3>${i+1}. ${esc(q.question_text)} <small>(${q.points} نقطة)</small></h3>
+<textarea name="q_${q.id}" placeholder="اكتب إجابتك هنا…"></textarea>
+</article>`;
 }).join('');
 
 questionsLoaded=true;
@@ -383,12 +459,13 @@ $('submit-btn').disabled=false;
 $('submit-btn').textContent='إنهاء الامتحان وإرسال الإجابات';
 
 showOnly('attempt-view');
-
 runTimer();
 
 }
 
-/* تشغيل المؤقت */
+/* ============================================================
+   المؤقت
+   ============================================================ */
 
 function runTimer(){
 
@@ -399,16 +476,12 @@ function updateTimer(){
 const remaining=deadline-Date.now();
 
 if(remaining<=0){
-
 $('timer').textContent='انتهى الوقت';
-
 clearInterval(timerHandle);
-
 if(!autoFinishTriggered&&!isSubmitting){
 autoFinishTriggered=true;
 finishExam(true);
 }
-
 return;
 }
 
@@ -420,40 +493,30 @@ $('timer').textContent=
 'الوقت المتبقي: '+
 String(minutes).padStart(2,'0')+':' +
 String(seconds).padStart(2,'0');
-
 }
 
 updateTimer();
 timerHandle=setInterval(updateTimer,1000);
-
 }
 
-/* جمع إجابات الطالب */
+/* ============================================================
+   جمع الإجابات
+   ============================================================ */
 
 function collectAnswers(){
 
 return currentQuestions.map(q=>{
 
 if(q.question_type==='mcq'){
-
-const selected=$(
-'answer-form'
-).querySelector(
-`input[name="q_${q.id}"]:checked`
-);
-
+const selected=$('answer-form').querySelector(`input[name="q_${q.id}"]:checked`);
 return {
 question_id:q.id,
 selected_option_id:selected?selected.value:null,
 written_answer:null
 };
-
 }
 
-const textarea=$('answer-form').querySelector(
-`textarea[name="q_${q.id}"]`
-);
-
+const textarea=$('answer-form').querySelector(`textarea[name="q_${q.id}"]`);
 return {
 question_id:q.id,
 selected_option_id:null,
@@ -464,7 +527,9 @@ written_answer:textarea?textarea.value:''
 
 }
 
-/* إرسال الإجابات وعرض النتيجة */
+/* ============================================================
+   إرسال الإجابات
+   ============================================================ */
 
 async function finishExam(automatic=false){
 
@@ -473,7 +538,6 @@ return;
 }
 
 isSubmitting=true;
-
 clearInterval(timerHandle);
 
 const btn=$('submit-btn');
@@ -492,17 +556,11 @@ p_answers:answers
 }
 );
 
-if(error){
+if(error) throw error;
+if(!data) throw new Error('لم يتم استلام نتيجة الإرسال.');
 
-throw error;
-
-}
-
-if(!data){
-throw new Error('لم يتم استلام نتيجة الإرسال.');
-}
-
-/* عرض النتيجة */
+/* تنظيف ترتيب النموذج بعد الإرسال الناجح */
+if(currentExam) sessionStorage.removeItem(orderKey(currentExam.id));
 
 const objective=Number(data.objective_score||0);
 const manual=Number(data.manual_score||0);
@@ -511,13 +569,11 @@ const maxObjective=Number(data.max_objective_points||0);
 const maxScore=Number(data.max_score||0);
 
 $('result-content').innerHTML=`
-
 <p class="note">
-${automatic?
-'انتهى الوقت وتم إرسال الإجابات التي أدخلتها تلقائياً.':
-'تم إرسال إجاباتك بنجاح.'}
+${automatic
+?'انتهى الوقت وتم إرسال الإجابات التي أدخلتها تلقائياً.'
+:'تم إرسال إجاباتك بنجاح.'}
 </p>
-
 <div class="exam-card">
 <p>العلامة</p>
 <div class="score">${objective} / ${maxObjective}</div>
@@ -525,16 +581,14 @@ ${automatic?
 <p class="note">
 العلامة القصوى للامتحان: ${maxScore}
 <br>
-${pending>0?
-'ستظهر العلامة النهائية بعد انتهاء الأستاذ من تصحيح الإجابات الكتابية.':
-'تم احتساب العلامات المسجلة في هذه المحاولة.'}
+${pending>0
+?'ستظهر العلامة النهائية بعد انتهاء الأستاذ من تصحيح الإجابات الكتابية.'
+:'تم احتساب العلامات المسجلة في هذه المحاولة.'}
 </p>
-
 `;
 
 currentAttempt=null;
 questionsLoaded=false;
-
 showOnly('result-view');
 
 }catch(err){
@@ -549,15 +603,15 @@ showStatus(
 
 btn.disabled=false;
 btn.textContent='إعادة محاولة إرسال الإجابات';
-
 isSubmitting=false;
 
 }
 
 }
 
-
-/* مستمع إرسال النموذج */
+/* ============================================================
+   مستمع إرسال النموذج
+   ============================================================ */
 
 $('answer-form').addEventListener('submit',async function(e){
 
@@ -572,24 +626,21 @@ alert(
 return;
 }
 
-if(isSubmitting){
-return;
-}
+if(isSubmitting) return;
 
 const confirmed=confirm(
 'هل أنت متأكد من إرسال إجاباتك؟ لن تتمكن من تعديلها بعد الإرسال.'
 );
 
-if(!confirmed){
-return;
-}
+if(!confirmed) return;
 
 await finishExam(false);
 
 });
 
-
-/* تسجيل الدخول */
+/* ============================================================
+   تسجيل الدخول
+   ============================================================ */
 
 $('login-form').addEventListener('submit',async function(e){
 
@@ -626,24 +677,21 @@ if(!data.session){
 showStatus('auth-status','لم يتم إنشاء جلسة دخول.');
 return;
 }
-  hideStatus('auth-status');
+hideStatus('auth-status');
 showOnly('student-view');
-
 await loadExams();
 
 }catch(err){
-
 showStatus('auth-status','حدث خطأ: '+err.message);
-
 }finally{
-
 btn.disabled=false;
-
 }
 
 });
 
-/* تسجيل الخروج */
+/* ============================================================
+   تسجيل الخروج
+   ============================================================ */
 
 $('logout-btn').addEventListener('click',async function(){
 
@@ -651,10 +699,13 @@ if(currentAttempt){
 const ok=confirm(
 'لديك محاولة غير مرسلة. هل تريد تسجيل الخروج؟ يمكنك استكمالها لاحقاً إذا سمح وقتها.'
 );
-if(!ok)return;
+if(!ok) return;
 }
 
 clearInterval(timerHandle);
+
+/* تنظيف ترتيب النموذج */
+if(currentExam) sessionStorage.removeItem(orderKey(currentExam.id));
 
 const {error}=await db.auth.signOut();
 
@@ -670,12 +721,13 @@ questionsLoaded=false;
 isSubmitting=false;
 
 $('login-form').reset();
-
 showOnly('auth-panel');
 
 });
 
-/* العودة إلى قائمة الامتحانات */
+/* ============================================================
+   العودة إلى قائمة الامتحانات
+   ============================================================ */
 
 $('back-btn').addEventListener('click',async function(){
 
@@ -685,12 +737,13 @@ currentQuestions=[];
 questionsLoaded=false;
 
 showOnly('student-view');
-
 await loadExams();
 
 });
 
-/* استعادة الجلسة عند إعادة تحميل الصفحة */
+/* ============================================================
+   استعادة الجلسة عند إعادة تحميل الصفحة
+   ============================================================ */
 
 (async function restoreSession(){
 
@@ -702,14 +755,10 @@ return;
 }
 
 if(data.session){
-
 showOnly('student-view');
 await loadExams();
-
 }else{
-
 showOnly('auth-panel');
-
 }
 
 })();
@@ -717,4 +766,3 @@ showOnly('auth-panel');
 </script>
 </body>
 </html>
-
