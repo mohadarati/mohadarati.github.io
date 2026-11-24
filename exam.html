@@ -265,6 +265,9 @@ a?.submitted_at
 تم إرسال إجابتك.
 <br>
 العلامة : ${a.objective_score} / ${a.max_objective_points}
+<br>
+العلامة الكتابية: ${a.manual_score||0}
+${a.pending_points>0?' (بانتظار التصحيح)':''}
 </p>`
 :
 `<button data-exam="${esc(x.id)}">
