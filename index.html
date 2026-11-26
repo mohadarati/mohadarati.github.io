@@ -411,9 +411,9 @@ loadBooks();loadResearch();
 <!-- ✅ سكربت المؤقت المستقل — يعمل بدون إنترنت -->
 <script>
 (function() {
-    // ⚠️ غيّر التاريخ هنا: (السنة, الشهر-1, اليوم, الساعة, الدقيقة, الثانية)
+    // ⚠️ غيّر التاريخ هنا: (السنة, الشهر-1, اليوم)
     // 01 ديسمبر 2026 
-const targetDate = new Date(2026, 11, 01).getTime();
+const targetDate = new Date(2026, 12, 01).getTime();
     function updateCountdown() {
         const display = document.getElementById('countdown-display');
         if (!display) return;
@@ -427,12 +427,9 @@ const targetDate = new Date(2026, 11, 01).getTime();
             return;
         }
 
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        const days = Math.floor(distance / (1000 * 60 * 60 * 01));
 
-        display.textContent = `${days} يوم : ${String(hours).padStart(2,'0')} ساعة : ${String(minutes).padStart(2,'0')} دقيقة : ${String(seconds).padStart(2,'0')} ثانية`;
+        display.textContent = `${days} يوم 
     }
 
     updateCountdown();
