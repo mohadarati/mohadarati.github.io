@@ -408,12 +408,26 @@ async function loadResearch(){
 loadBooks();loadResearch();
 </script>
 
-<!-- ✅ سكربت المؤقت المستقل — يعمل بدون إنترنت -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>الوقت المتبقي للامتحان</title>
+<style>
+  body { font-family: Arial; text-align: center; padding: 40px; background: #f4f6f8; }
+  #countdown-display { font-size: 2rem; font-weight: bold; color: #1a5276; }
+  .countdown-expired { color: #c0392b; }
+</style>
+</head>
+<body>
+  <h2>الوقت المتبقي حتى امتحان الثلاثاء 01 ديسمبر 2026</h2>
+  <div id="countdown-display">...</div>
+
 <script>
 (function() {
-    // ⚠️ غيّر التاريخ هنا: (السنة, الشهر-1, اليوم)
-    // 01 ديسمبر 2026 
-const targetDate = new Date(2026, 12, 01).getTime();
+    // ✅ 01 ديسمبر 2026 → الشهر = 11 (لأن جانفي = 0)
+    const targetDate = new Date(2026, 11, 1, 0, 0, 0).getTime();
+
     function updateCountdown() {
         const display = document.getElementById('countdown-display');
         if (!display) return;
@@ -427,9 +441,12 @@ const targetDate = new Date(2026, 12, 01).getTime();
             return;
         }
 
-        const days = Math.floor(distance / (1000 * 60 * 60 * 01));
+        const days    = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours   = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        display.textContent = `${days} يوم 
+        display.textContent = `${days} يوم و ${hours} ساعة و ${minutes} دقيقة و ${seconds} ثانية`;
     }
 
     updateCountdown();
