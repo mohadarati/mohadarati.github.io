@@ -161,16 +161,17 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     <label>الفوج الحالي
       <input id="edit-student-current-group" type="text" readonly>
     </label>
-    <label>الفوج الجديد
-      <select id="edit-student-group" required>
-        <option value="">-- اختر الفوج --</option>
-        <option value="1">الفوج 1</option>
-        <option value="2">الفوج 2</option>
-        <option value="3">الفوج 3</option>
-        <option value="4">الفوج 4</option>
-        <option value="5">الفوج 5</option>
-      </select>
-    </label>
+<label>الفوج الجديد
+  <select id="edit-student-group" required>
+    <option value="">-- اختر الفوج --</option>
+    <option value="1">الفوج 1</option>
+    <option value="2">الفوج 2</option>
+    <option value="3">الفوج 3</option>
+    <option value="4">الفوج 4</option>
+    <option value="5">الفوج 5</option>
+    <option value="6">الفوج 6</option>
+  </select>
+</label>
     <button id="edit-group-button" type="submit">💾 حفظ الفوج الجديد</button>
     <button type="button" id="cancel-group-button">إلغاء</button>
   </form>
@@ -1081,86 +1082,95 @@ $('logout').onclick = async () => { await db.auth.signOut(); location.reload(); 
 })();
 // ===== تعديل الفوج فقط =====
 
-const loadStudentForm = document.getElementById('load-student-form');
-const editGroupForm = document.getElementById('edit-group-form');
-const editStatus = document.getElementById('edit-group-status');
+const groupLoadForm = document.getElementById('load-student-form');
+const groupEditForm = document.getElementById('edit-group-form');
 
-let currentStudentId = null;
+let groupCurrentUserId = null;   // ← user_id وليس id
 
-function showEditStatus(msg, type = 'success') {
-  editStatus.textContent = msg;
-  editStatus.className = `status ${type}`;
-  editStatus.classList.remove('hidden');
+function showGroupStatus(msg, type = 'success') {
+  const el = document.getElementById('edit-group-status');
+  el.textContent = msg;
+  el.className = `status ${type}`;
+  el.classList.remove('hidden');
 }
 
-function hideEditStatus() {
-  editStatus.classList.add('hidden');
+function hideGroupStatus() {
+  document.getElementById('edit-group-status').classList.add('hidden');
 }
 
 // ===== 1. جلب بيانات الطالب =====
-loadStudentForm.addEventListener('submit', async (e) => {
+groupLoadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  hideEditStatus();
+  hideGroupStatus();
 
-  const studentNumber = document.getElementById('edit-student-number').value.trim();
-  if (!/^\d{8}$/.test(studentNumber)) {
-    showEditStatus('رقم التسجيل يجب أن يكون 8 أرقام', 'error');
+  const number = document.getElementById('edit-student-number').value.trim();
+  if (!/^\d{8}$/.test(number)) {
+    showGroupStatus('رقم التسجيل يجب أن يكون 8 أرقام', 'error');
     return;
   }
 
   try {
-    const res = await fetch(`/api/students/by-number/${studentNumber}`);
-    if (!res.ok) throw new Error('لم يتم العثور على الطالب');
-    const student = await res.json();
+    // ✅ البحث بـ registration_number كنص
+    const { data: student, error } = await supabase
+      .from('student_profiles')
+      .select('user_id, registration_number, first_name, last_name, group_number')
+      .eq('registration_number', number)
+      .single();
 
-    currentStudentId = student.id;
+    if (error || !student) {
+      throw new Error('لم يتم العثور على الطالب');
+    }
 
-    // عرض اسم الطالب والفوج الحالي (للقراءة فقط)
-    document.getElementById('edit-student-name-display').value = student.name || '';
-    document.getElementById('edit-student-current-group').value = student.group || 'غير محدد';
+    groupCurrentUserId = student.user_id;
 
-    // ضبط القائمة المنسدلة على الفوج الحالي
-    document.getElementById('edit-student-group').value = student.group || '';
+    // ✅ عرض الاسم الكامل (first_name + last_name)
+    const fullName = `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'غير محدد';
+    document.getElementById('edit-student-name-display').value  = fullName;
+    document.getElementById('edit-student-current-group').value = student.group_number ?? 'غير محدد';
+    document.getElementById('edit-student-group').value         = student.group_number ?? '';
 
-    editGroupForm.classList.remove('hidden');
-    showEditStatus('✅ تم جلب البيانات، اختر الفوج الجديد', 'success');
+    groupEditForm.classList.remove('hidden');
+    showGroupStatus('✅ تم جلب البيانات، اختر الفوج الجديد');
   } catch (err) {
-    showEditStatus('❌ ' + err.message, 'error');
-    editGroupForm.classList.add('hidden');
+    console.error('خطأ Supabase:', err);
+    showGroupStatus('❌ ' + err.message, 'error');
+    groupEditForm.classList.add('hidden');
   }
 });
 
 // ===== 2. حفظ الفوج الجديد =====
-editGroupForm.addEventListener('submit', async (e) => {
+groupEditForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!currentStudentId) return;
+  if (!groupCurrentUserId) return;
 
-  const newGroup = document.getElementById('edit-student-group').value;
-  if (!newGroup) {
-    showEditStatus('يرجى اختيار الفوج', 'error');
+  const newGroup = parseInt(document.getElementById('edit-student-group').value, 10);
+  if (!newGroup || newGroup < 1 || newGroup > 6) {
+    showGroupStatus('الفوج يجب أن يكون بين 1 و 6', 'error');
     return;
   }
 
   try {
-    const res = await fetch(`/api/students/${currentStudentId}/group`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group: newGroup })
-    });
-    if (!res.ok) throw new Error('فشل تحديث الفوج');
+    // ✅ التحديث باستخدام user_id
+    const { error } = await supabase
+      .from('student_profiles')
+      .update({ group_number: newGroup })
+      .eq('user_id', groupCurrentUserId);
 
-    showEditStatus(`✅ تم تغيير الفوج إلى: ${newGroup}`, 'success');
+    if (error) throw error;
+
+    showGroupStatus(`✅ تم تغيير الفوج إلى: ${newGroup}`);
   } catch (err) {
-    showEditStatus('❌ ' + err.message, 'error');
+    console.error('خطأ التحديث:', err);
+    showGroupStatus('❌ ' + err.message, 'error');
   }
 });
 
 // ===== 3. إلغاء =====
 document.getElementById('cancel-group-button').addEventListener('click', () => {
-  editGroupForm.classList.add('hidden');
-  loadStudentForm.reset();
-  currentStudentId = null;
-  hideEditStatus();
+  groupEditForm.classList.add('hidden');
+  groupLoadForm.reset();
+  groupCurrentUserId = null;
+  hideGroupStatus();
 });
 </script>
 </body>
