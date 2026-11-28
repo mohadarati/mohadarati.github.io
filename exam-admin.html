@@ -1080,12 +1080,19 @@ $('logout').onclick = async () => { await db.auth.signOut(); location.reload(); 
     startLiveAutoRefresh();
   }
 })();
+// ===== إنشاء عميل Supabase =====
+// ⚠️ استبدل الرابط والمفتاح بمعلومات مشروعك من: Supabase Dashboard → Settings → API
+const SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ===== تعديل الفوج فقط =====
 
 const groupLoadForm = document.getElementById('load-student-form');
 const groupEditForm = document.getElementById('edit-group-form');
 
-let groupCurrentUserId = null;   // ← user_id وليس id
+let groupCurrentUserId = null; // user_id وليس id
 
 function showGroupStatus(msg, type = 'success') {
   const el = document.getElementById('edit-group-status');
@@ -1110,8 +1117,8 @@ groupLoadForm.addEventListener('submit', async (e) => {
   }
 
   try {
-    // ✅ البحث بـ registration_number كنص
-    const { data: student, error } = await supabase
+    // ✅ supabaseClient بدل supabase
+    const { data: student, error } = await supabaseClient
       .from('student_profiles')
       .select('user_id, registration_number, first_name, last_name, group_number')
       .eq('registration_number', number)
@@ -1150,8 +1157,8 @@ groupEditForm.addEventListener('submit', async (e) => {
   }
 
   try {
-    // ✅ التحديث باستخدام user_id
-    const { error } = await supabase
+    // ✅ supabaseClient بدل supabase
+    const { error } = await supabaseClient
       .from('student_profiles')
       .update({ group_number: newGroup })
       .eq('user_id', groupCurrentUserId);
