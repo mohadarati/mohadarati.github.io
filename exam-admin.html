@@ -1079,6 +1079,89 @@ $('logout').onclick = async () => { await db.auth.signOut(); location.reload(); 
     startLiveAutoRefresh();
   }
 })();
+// ===== تعديل الفوج فقط =====
+
+const loadStudentForm = document.getElementById('load-student-form');
+const editGroupForm = document.getElementById('edit-group-form');
+const editStatus = document.getElementById('edit-group-status');
+
+let currentStudentId = null;
+
+function showEditStatus(msg, type = 'success') {
+  editStatus.textContent = msg;
+  editStatus.className = `status ${type}`;
+  editStatus.classList.remove('hidden');
+}
+
+function hideEditStatus() {
+  editStatus.classList.add('hidden');
+}
+
+// ===== 1. جلب بيانات الطالب =====
+loadStudentForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideEditStatus();
+
+  const studentNumber = document.getElementById('edit-student-number').value.trim();
+  if (!/^\d{8}$/.test(studentNumber)) {
+    showEditStatus('رقم التسجيل يجب أن يكون 8 أرقام', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/students/by-number/${studentNumber}`);
+    if (!res.ok) throw new Error('لم يتم العثور على الطالب');
+    const student = await res.json();
+
+    currentStudentId = student.id;
+
+    // عرض اسم الطالب والفوج الحالي (للقراءة فقط)
+    document.getElementById('edit-student-name-display').value = student.name || '';
+    document.getElementById('edit-student-current-group').value = student.group || 'غير محدد';
+
+    // ضبط القائمة المنسدلة على الفوج الحالي
+    document.getElementById('edit-student-group').value = student.group || '';
+
+    editGroupForm.classList.remove('hidden');
+    showEditStatus('✅ تم جلب البيانات، اختر الفوج الجديد', 'success');
+  } catch (err) {
+    showEditStatus('❌ ' + err.message, 'error');
+    editGroupForm.classList.add('hidden');
+  }
+});
+
+// ===== 2. حفظ الفوج الجديد =====
+editGroupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentStudentId) return;
+
+  const newGroup = document.getElementById('edit-student-group').value;
+  if (!newGroup) {
+    showEditStatus('يرجى اختيار الفوج', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/students/${currentStudentId}/group`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: newGroup })
+    });
+    if (!res.ok) throw new Error('فشل تحديث الفوج');
+
+    showEditStatus(`✅ تم تغيير الفوج إلى: ${newGroup}`, 'success');
+  } catch (err) {
+    showEditStatus('❌ ' + err.message, 'error');
+  }
+});
+
+// ===== 3. إلغاء =====
+document.getElementById('cancel-group-button').addEventListener('click', () => {
+  editGroupForm.classList.add('hidden');
+  loadStudentForm.reset();
+  currentStudentId = null;
+  hideEditStatus();
+});
 </script>
 </body>
 </html>
