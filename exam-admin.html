@@ -24,8 +24,6 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
 .status{padding:11px;background:#eaf1ff;border-radius:9px;margin:10px 0}
 .hidden{display:none!important}
 .item{border:1px solid #e3eaf5;padding:12px;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
-.toggle-row{display:flex;grid-template-columns:auto 1fr;align-items:center;gap:8px}
-.toggle-row input[type=checkbox]{width:auto}
 @media(max-width:600px){.panel{padding:15px}.item{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -49,6 +47,7 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
 
 <section id="manager" class="hidden">
 
+  <!-- ================= إنشاء امتحان ================= -->
   <div class="panel">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <h1>إنشاء امتحان</h1>
@@ -60,21 +59,24 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
       <label>مدة الامتحان بالدقائق<input id="duration" type="number" min="1" max="300" value="60" required></label>
       <label>تاريخ بداية الإتاحة (اختياري)<input id="starts" type="datetime-local"></label>
       <label>تاريخ نهاية الإتاحة (اختياري)<input id="ends" type="datetime-local"></label>
-      <label class="toggle-row"><input id="published" type="checkbox" checked> نشر الامتحان فور الحفظ</label>
-      <label class="toggle-row"><input id="shuffle-q" type="checkbox" checked> خلط ترتيب الأسئلة لكل طالب</label>
-      <label class="toggle-row"><input id="shuffle-o" type="checkbox" checked> خلط ترتيب الخيارات داخل كل سؤال</label>
+      <label style="display:flex;grid-template-columns:auto 1fr;align-items:center">
+        <input id="published" type="checkbox" checked style="width:auto"> نشر الامتحان فور الحفظ
+      </label>
       <h2>أسئلة الامتحان</h2>
       <div id="questions"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="secondary" id="add-mcq">إضافة سؤال اختيار من متعدد</button>
         <button type="button" class="secondary" id="add-written">إضافة سؤال كتابي</button>
       </div>
-      <p style="color:#7183a2;font-size:13px">في سؤال الاختيار من متعدد، أدخل الاختيارات وحدد الإجابة الصحيحة. السؤال الكتابي يصححه الأستاذ بعد الإرسال.</p>
+      <p style="color:#7183a2;font-size:13px">
+        في سؤال الاختيار من متعدد، أدخل الاختيارات وحدد الإجابة الصحيحة. السؤال الكتابي يصححه الأستاذ بعد الإرسال.
+      </p>
       <button id="save-exam" type="submit">حفظ الامتحان</button>
     </form>
     <div id="save-status" class="status hidden"></div>
   </div>
 
+  <!-- ================= تعديل امتحان ================= -->
   <div class="panel hidden" id="edit-exam-panel">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <h2>تعديل الامتحان</h2>
@@ -86,9 +88,9 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
       <label>مدة الامتحان بالدقائق<input id="edit-duration" type="number" min="1" max="300" required></label>
       <label>تاريخ بداية الإتاحة (اختياري)<input id="edit-starts" type="datetime-local"></label>
       <label>تاريخ نهاية الإتاحة (اختياري)<input id="edit-ends" type="datetime-local"></label>
-      <label class="toggle-row"><input id="edit-published" type="checkbox"> منشور</label>
-      <label class="toggle-row"><input id="edit-shuffle-q" type="checkbox"> خلط ترتيب الأسئلة لكل طالب</label>
-      <label class="toggle-row"><input id="edit-shuffle-o" type="checkbox"> خلط ترتيب الخيارات داخل كل سؤال</label>
+      <label style="display:flex;grid-template-columns:auto 1fr;align-items:center">
+        <input id="edit-published" type="checkbox" style="width:auto"> منشور
+      </label>
       <h2>أسئلة الامتحان</h2>
       <div id="edit-questions"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -100,6 +102,7 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     </form>
   </div>
 
+  <!-- ================= إدارة الطلبة ================= -->
   <div class="panel">
     <h2>إدارة الطلبة</h2>
     <p>أنشئ حساباً لكل طالب باستخدام رقم التسجيل واللقب والاسم وكلمة المرور.</p>
@@ -107,9 +110,15 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
       <label>رقم التسجيل الجامعي (8 أرقام)
         <input id="new-student-number" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" placeholder="38290618" required>
       </label>
-      <label>لقب الطالب<input id="new-student-last-name" type="text" placeholder="عواني" required></label>
-      <label>اسم الطالب<input id="new-student-first-name" type="text" placeholder="محمد" required></label>
-      <label>كلمة المرور الأولية<input id="new-student-password" type="password" minlength="8" autocomplete="new-password" required></label>
+      <label>لقب الطالب
+        <input id="new-student-last-name" type="text" placeholder="عواني" required>
+      </label>
+      <label>اسم الطالب
+        <input id="new-student-first-name" type="text" placeholder="محمد" required>
+      </label>
+      <label>كلمة المرور الأولية
+        <input id="new-student-password" type="password" minlength="8" autocomplete="new-password" required>
+      </label>
       <label>فوج الطالب
         <select id="new-student-group" required>
           <option value="">اختر الفوج</option>
@@ -127,6 +136,7 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     <p style="font-size:13px;color:#7183a2">سلّم كلمة المرور للطالب بطريقة آمنة.</p>
   </div>
 
+  <!-- ================= تغيير كلمة مرور ================= -->
   <div class="panel">
     <h2>تغيير كلمة مرور طالب</h2>
     <p>أدخل رقم تسجيل الطالب وكلمة المرور الجديدة.</p>
@@ -134,17 +144,24 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
       <label>رقم التسجيل الجامعي
         <input id="reset-student-number" type="text" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" placeholder="37185601" required>
       </label>
-      <label>كلمة المرور الجديدة<input id="reset-new-password" type="password" minlength="8" autocomplete="new-password" required></label>
-      <label>تأكيد كلمة المرور الجديدة<input id="reset-confirm-password" type="password" minlength="8" autocomplete="new-password" required></label>
+      <label>كلمة المرور الجديدة
+        <input id="reset-new-password" type="password" minlength="8" autocomplete="new-password" required>
+      </label>
+      <label>تأكيد كلمة المرور الجديدة
+        <input id="reset-confirm-password" type="password" minlength="8" autocomplete="new-password" required>
+      </label>
       <button id="reset-password-button" type="submit">تغيير كلمة المرور</button>
     </form>
     <div id="reset-password-status" class="status hidden" role="status"></div>
   </div>
 
+  <!-- ================= استيراد Excel ================= -->
   <div class="panel">
     <h2>استيراد الطلبة من ملف Excel</h2>
-    <p>اختر ملف Excel يحتوي على الأعمدة: الاسم، اللقب، رقم التسجيل، كلمة السر.</p>
-    <label>ملف الطلبة Excel<input type="file" id="students-excel" accept=".xlsx,.xls,.csv"></label>
+    <p>اختر ملف Excel يحتوي على الأعمدة التالية: الاسم، اللقب، رقم التسجيل، كلمة السر.</p>
+    <label>ملف الطلبة Excel
+      <input type="file" id="students-excel" accept=".xlsx,.xls,.csv">
+    </label>
     <label>اختر فوج الطلبة
       <select id="import-group" required>
         <option value="">اختر الفوج</option>
@@ -161,18 +178,22 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     <div id="excel-report"></div>
   </div>
 
+  <!-- ================= قائمة الامتحانات ================= -->
   <div class="panel">
     <h2>الامتحانات المنشأة</h2>
     <div id="exam-list">جارٍ التحميل…</div>
   </div>
 
+  <!-- ================= الطلبة النشطون الآن ================= -->
   <div class="panel">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
       <h2>الطلبة الذين يؤدّون الامتحان الآن</h2>
       <button type="button" class="secondary" id="refresh-live">تحديث</button>
     </div>
     <label>اختر الامتحان
-      <select id="live-exam"><option value="">اختر امتحاناً</option></select>
+      <select id="live-exam">
+        <option value="">اختر امتحاناً</option>
+      </select>
     </label>
     <label>تصفية حسب الفوج
       <select id="live-group">
@@ -190,10 +211,13 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     <div id="live-list">اختر امتحاناً لعرض الطلبة النشطين.</div>
   </div>
 
+  <!-- ================= النتائج ================= -->
   <div class="panel">
     <h2>إجابات الطلبة وتصحيح الأسئلة الكتابية</h2>
     <label>اختر الامتحان
-      <select id="results-exam"><option value="">اختر امتحاناً</option></select>
+      <select id="results-exam">
+        <option value="">اختر امتحاناً</option>
+      </select>
     </label>
     <label>تصفية النتائج حسب الفوج
       <select id="results-group">
@@ -222,10 +246,8 @@ const SUPABASE_KEY = 'sb_publishable_9teiooHAYa213aw3tTnFJg_AnD1s59b';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 let qcount = 0;
-let editingExamId = null;
-let editQcount = 0;
-let liveTimer = null;
 
+/* ============ أدوات مساعدة ============ */
 function status(id, msg) {
   $(id).textContent = msg;
   $(id).classList.remove('hidden');
@@ -249,12 +271,13 @@ function formatDuration(startIso, endIso) {
   const m = totalMin % 60;
   return h > 0 ? `${h} س ${m} د` : `${m} د`;
 }
+
 async function teacher() {
   const { data, error } = await db.rpc('is_teacher');
-  if (error) { console.error('is_teacher error:', error); return false; }
-  return data === true;
+  return !error && data === true;
 }
 
+/* ============ تسجيل الدخول ============ */
 async function login(e) {
   e.preventDefault();
   const { error } = await db.auth.signInWithPassword({
@@ -274,6 +297,7 @@ async function login(e) {
 }
 $('login-form').addEventListener('submit', login);
 
+/* ============ إنشاء سؤال ============ */
 function addQuestion(type) {
   qcount++;
   const id = 'qe' + qcount;
@@ -301,6 +325,7 @@ function addQuestion(type) {
   $('questions').appendChild(box);
 }
 
+/* ============ حفظ امتحان جديد ============ */
 async function saveExam(e) {
   e.preventDefault();
   if (!await teacher()) { status('save-status', 'انتهت الجلسة أو لا تملك الصلاحية.'); return; }
@@ -314,12 +339,13 @@ async function saveExam(e) {
     duration_minutes: Number($('duration').value),
     is_published: $('published').checked,
     starts_at: $('starts').value ? new Date($('starts').value).toISOString() : null,
-    ends_at: $('ends').value ? new Date($('ends').value).toISOString() : null,
-    shuffle_questions: $('shuffle-q').checked,
-    shuffle_options: $('shuffle-o').checked
+    ends_at: $('ends').value ? new Date($('ends').value).toISOString() : null
   };
   const { data: exam, error } = await db.from('exams').insert(payload).select().single();
-  if (error) { status('save-status', 'تعذر إنشاء الامتحان: ' + error.message); btn.disabled = false; return; }
+  if (error) {
+    status('save-status', 'تعذر إنشاء الامتحان: ' + error.message);
+    btn.disabled = false; return;
+  }
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i], type = b.dataset.type;
     const { data: q, error: qe } = await db.from('exam_questions').insert({
@@ -329,7 +355,7 @@ async function saveExam(e) {
       points: Number(b.querySelector('.points').value),
       position: i + 1
     }).select().single();
-    if (qe) { status('save-status', 'خطأ عند حفظ سؤال: ' + qe.message); btn.disabled = false; return; }
+    if (qe) { status('save-status', 'تم إنشاء الامتحان، لكن حدث خطأ عند حفظ سؤال: ' + qe.message); btn.disabled = false; return; }
     if (type === 'mcq') {
       const vals = [...b.querySelectorAll('.opt')].map(x => x.value.trim());
       const { data: opts, error: oe } = await db.from('exam_options')
@@ -349,25 +375,25 @@ async function saveExam(e) {
   btn.disabled = false;
 }
 
+/* ============ قائمة الامتحانات ============ */
 async function loadAdminExams() {
   const { data, error } = await db
     .from('exams')
-    .select('id,title,description,duration_minutes,is_published,starts_at,ends_at,created_at,shuffle_questions,shuffle_options')
+    .select('id,title,description,duration_minutes,is_published,starts_at,ends_at,created_at')
     .order('created_at', { ascending: false });
 
-  if (error) { $('exam-list').textContent = 'تعذر تحميل القائمة: ' + error.message; return; }
+  if (error) {
+    $('exam-list').textContent = 'تعذر تحميل القائمة: ' + error.message;
+    return;
+  }
 
   $('exam-list').innerHTML = (data || []).map(x => `
     <div class="item">
       <span>
         <strong>${escapeExcelText(x.title)}</strong><br>
-        <small>${x.is_published ? 'منشور' : 'مسودة'} — المدة: ${x.duration_minutes || '—'} د —
-          خلط الأسئلة: ${x.shuffle_questions !== false ? '✓' : '✗'} —
-          خلط الخيارات: ${x.shuffle_options !== false ? '✓' : '✗'}
-        </small>
+        <small>${x.is_published ? 'منشور' : 'مسودة'} — المدة: ${x.duration_minutes || '—'} د</small>
       </span>
       <span style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="secondary" data-preview="${x.id}">معاينة نموذج طالب</button>
         <button class="secondary" data-edit="${x.id}">تعديل</button>
         <button class="secondary" data-toggle="${x.id}" data-pub="${!x.is_published}">
           ${x.is_published ? 'إلغاء النشر' : 'نشر'}
@@ -377,18 +403,16 @@ async function loadAdminExams() {
     </div>
   `).join('') || 'لا توجد امتحانات بعد.';
 
-  $('exam-list').querySelectorAll('[data-preview]').forEach(b => {
-    b.onclick = () => {
-      const reg = prompt('أدخل رقم تسجيل الطالب لمعاينة النموذج الذي يراه (8 أرقام):');
-      if (!reg || !/^[0-9]{8}$/.test(reg)) return;
-      window.open(`./exam-preview.html?exam=${encodeURIComponent(b.dataset.preview)}&reg=${encodeURIComponent(reg)}`, '_blank');
-    };
+  $('exam-list').querySelectorAll('[data-edit]').forEach(b => {
+    b.onclick = () => openEditExam(b.dataset.edit);
   });
-  $('exam-list').querySelectorAll('[data-edit]').forEach(b => { b.onclick = () => openEditExam(b.dataset.edit); });
   $('exam-list').querySelectorAll('[data-toggle]').forEach(b => {
     b.onclick = async () => {
-      const { error } = await db.from('exams').update({ is_published: b.dataset.pub === 'true' }).eq('id', b.dataset.toggle);
-      if (error) alert('خطأ: ' + error.message); else await loadAdminExams();
+      const { error } = await db.from('exams')
+        .update({ is_published: b.dataset.pub === 'true' })
+        .eq('id', b.dataset.toggle);
+      if (error) alert('خطأ: ' + error.message);
+      else await loadAdminExams();
     };
   });
   $('exam-list').querySelectorAll('[data-del]').forEach(b => {
@@ -400,6 +424,7 @@ async function loadAdminExams() {
     };
   });
 
+  // ملء قائمتي النتائج و"الآن"
   const resultsSel = $('results-exam');
   const resultsOld = resultsSel.value;
   resultsSel.innerHTML = '<option value="">اختر امتحاناً</option>' +
@@ -413,6 +438,12 @@ async function loadAdminExams() {
   if (liveOld) liveSel.value = liveOld;
 }
 
+/* ============================================================
+   تعديل الامتحان
+   ============================================================ */
+let editingExamId = null;
+let editQcount = 0;
+
 function addEditQuestion(type, prefill) {
   editQcount++;
   const id = 'eqe' + editQcount;
@@ -420,9 +451,11 @@ function addEditQuestion(type, prefill) {
   box.className = 'question-editor';
   box.dataset.type = type;
   if (prefill?.id) box.dataset.qid = prefill.id;
+
   const opts = prefill?.options || [1,2,3,4].map((n,i)=>({ option_text:'', is_correct:i===0 }));
   const correctIdx = opts.findIndex(o => o.is_correct);
   const safeCorrect = correctIdx >= 0 ? correctIdx : 0;
+
   box.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center">
       <strong>${type==='mcq'?'سؤال اختيار من متعدد':'سؤال كتابي'}</strong>
@@ -450,6 +483,7 @@ function addEditQuestion(type, prefill) {
 
 async function openEditExam(examId) {
   if (!await teacher()) { alert('انتهت الجلسة أو لا تملك الصلاحية.'); return; }
+
   editingExamId = examId;
   editQcount = 0;
   $('edit-questions').innerHTML = '';
@@ -464,8 +498,6 @@ async function openEditExam(examId) {
   $('edit-desc').value = exam.description || '';
   $('edit-duration').value = exam.duration_minutes || 60;
   $('edit-published').checked = !!exam.is_published;
-  $('edit-shuffle-q').checked = exam.shuffle_questions !== false;
-  $('edit-shuffle-o').checked = exam.shuffle_options   !== false;
   $('edit-starts').value = exam.starts_at ? toLocalInput(exam.starts_at) : '';
   $('edit-ends').value = exam.ends_at ? toLocalInput(exam.ends_at) : '';
 
@@ -479,8 +511,10 @@ async function openEditExam(examId) {
   const qIds = (questions || []).map(q => q.id);
   const optionsMap = new Map();
   const keysMap = new Map();
+
   if (qIds.length) {
-    const { data: opts } = await db.from('exam_options')
+    const { data: opts } = await db
+      .from('exam_options')
       .select('id,question_id,option_text,position')
       .in('question_id', qIds)
       .order('position', { ascending: true });
@@ -488,8 +522,11 @@ async function openEditExam(examId) {
       if (!optionsMap.has(o.question_id)) optionsMap.set(o.question_id, []);
       optionsMap.get(o.question_id).push(o);
     });
-    const { data: keys } = await db.from('exam_answer_keys')
-      .select('question_id,correct_option_id').in('question_id', qIds);
+
+    const { data: keys } = await db
+      .from('exam_answer_keys')
+      .select('question_id,correct_option_id')
+      .in('question_id', qIds);
     (keys || []).forEach(k => keysMap.set(k.question_id, k.correct_option_id));
   }
 
@@ -500,9 +537,18 @@ async function openEditExam(examId) {
         option_text: o.option_text,
         is_correct: o.id === correctId
       }));
-      addEditQuestion('mcq', { id: q.id, question_text: q.question_text, points: q.points, options: opts.length ? opts : undefined });
+      addEditQuestion('mcq', {
+        id: q.id,
+        question_text: q.question_text,
+        points: q.points,
+        options: opts.length ? opts : undefined
+      });
     } else {
-      addEditQuestion('written', { id: q.id, question_text: q.question_text, points: q.points });
+      addEditQuestion('written', {
+        id: q.id,
+        question_text: q.question_text,
+        points: q.points
+      });
     }
   });
 }
@@ -511,86 +557,71 @@ async function saveEditExam(e) {
   e.preventDefault();
   if (!await teacher()) { status('edit-status', 'انتهت الجلسة.'); return; }
   if (!editingExamId) return;
+
   const blocks = [...$('edit-questions').querySelectorAll('.question-editor')];
   if (!blocks.length) { status('edit-status', 'أضف سؤالاً واحداً على الأقل.'); return; }
+
   const btn = $('edit-save');
   btn.disabled = true;
   status('edit-status', 'جارٍ الحفظ...');
 
+  // 1) تحديث بيانات الامتحان
   const payload = {
     title: $('edit-title').value.trim(),
     description: $('edit-desc').value.trim(),
     duration_minutes: Number($('edit-duration').value),
     is_published: $('edit-published').checked,
     starts_at: $('edit-starts').value ? new Date($('edit-starts').value).toISOString() : null,
-    ends_at: $('edit-ends').value ? new Date($('edit-ends').value).toISOString() : null,
-    shuffle_questions: $('edit-shuffle-q').checked,
-    shuffle_options: $('edit-shuffle-o').checked
+    ends_at: $('edit-ends').value ? new Date($('edit-ends').value).toISOString() : null
   };
   const { error: ue } = await db.from('exams').update(payload).eq('id', editingExamId);
   if (ue) { status('edit-status', 'تعذر تحديث الامتحان: ' + ue.message); btn.disabled = false; return; }
 
-  const { data: attempts, error: ae } = await db.from('exam_attempts').select('id').eq('exam_id', editingExamId).limit(1);
+  // 2) التحقق من وجود محاولات
+  const { data: attempts, error: ae } = await db
+    .from('exam_attempts')
+    .select('id')
+    .eq('exam_id', editingExamId)
+    .limit(1);
   if (ae) { status('edit-status', 'تعذر التحقق من المحاولات: ' + ae.message); btn.disabled = false; return; }
+
   const hasAttempts = (attempts || []).length > 0;
 
   if (hasAttempts) {
-    status('edit-status', 'تم تحديث بيانات الامتحان. لا يمكن تعديل الأسئلة لوجود محاولات طلبة مسجّلة.');
-    await loadAdminExams(); btn.disabled = false; return;
+    status('edit-status',
+      'تم تحديث بيانات الامتحان (العنوان/المدة/التواريخ/النشر). ' +
+      'لا يمكن تعديل الأسئلة لوجود محاولات طلبة مسجّلة.');
+    await loadAdminExams();
+    btn.disabled = false;
+    return;
   }
 
+  // 3) إعادة بناء الأسئلة
   const { error: de } = await db.from('exam_questions').delete().eq('exam_id', editingExamId);
   if (de) { status('edit-status', 'تعذر حذف الأسئلة القديمة: ' + de.message); btn.disabled = false; return; }
-  
-  
+
   for (let i = 0; i < blocks.length; i++) {
-    const b = blocks[i];
-    const type = b.dataset.type;
-
-    const { data: q, error: qe } = await db
-      .from('exam_questions')
-      .insert({
-        exam_id: editingExamId,
-        question_text: b.querySelector('.qtext').value.trim(),
-        question_type: type,
-        points: Number(b.querySelector('.points').value),
-        position: i + 1
-      })
-      .select()
-      .single();
-
-    if (qe) {
-      status('edit-status', 'خطأ عند حفظ سؤال: ' + qe.message);
-      btn.disabled = false;
-      return;
-    }
+    const b = blocks[i], type = b.dataset.type;
+    const { data: q, error: qe } = await db.from('exam_questions').insert({
+      exam_id: editingExamId,
+      question_text: b.querySelector('.qtext').value.trim(),
+      question_type: type,
+      points: Number(b.querySelector('.points').value),
+      position: i + 1
+    }).select().single();
+    if (qe) { status('edit-status', 'خطأ عند حفظ سؤال: ' + qe.message); btn.disabled = false; return; }
 
     if (type === 'mcq') {
       const vals = [...b.querySelectorAll('.opt')].map(x => x.value.trim());
-      const { data: opts, error: oe } = await db
-        .from('exam_options')
+      const { data: opts, error: oe } = await db.from('exam_options')
         .insert(vals.map((option_text, j) => ({ question_id: q.id, option_text, position: j + 1 })))
         .select();
-
-      if (oe) {
-        status('edit-status', 'خطأ في الاختيارات: ' + oe.message);
-        btn.disabled = false;
-        return;
-      }
-
+          if (oe) { status('edit-status', 'خطأ في الاختيارات: ' + oe.message); btn.disabled = false; return; }
       const correct = Number(b.querySelector('input[type=radio]:checked').value);
-      const { error: ke } = await db
-        .from('exam_answer_keys')
-        .insert({ question_id: q.id, correct_option_id: opts[correct].id });
-
-      if (ke) {
-        status('edit-status', 'خطأ في مفتاح الإجابة: ' + ke.message);
-        btn.disabled = false;
-        return;
-      }
+      const { error: ke } = await db.from('exam_answer_keys').insert({ question_id: q.id, correct_option_id: opts[correct].id });
+      if (ke) { status('edit-status', 'خطأ في مفتاح الإجابة: ' + ke.message); btn.disabled = false; return; }
     }
   }
-
   status('edit-status', 'تم حفظ التعديلات بنجاح.');
   await loadAdminExams();
   btn.disabled = false;
@@ -600,6 +631,9 @@ $('close-edit').onclick = () => { $('edit-exam-panel').classList.add('hidden'); 
 $('edit-add-mcq').onclick = () => addEditQuestion('mcq');
 $('edit-add-written').onclick = () => addEditQuestion('written');
 $('edit-exam-form').addEventListener('submit', saveEditExam);
+
+/* ============ الطلبة النشطون الآن ============ */
+let liveTimer = null;
 
 async function loadLiveAttempts() {
   const examId = $('live-exam').value;
@@ -637,67 +671,27 @@ async function loadLiveAttempts() {
   }
 
   const now = Date.now();
-    box.innerHTML = filtered.map(a => {
+  box.innerHTML = filtered.map(a => {
     const s = a.student_profiles;
-    const studentName = (s.last_name || '') + ' ' + (s.first_name || '');
-    const written = answersByAttempt.get(a.id) || [];
-    const totalScore = Number(a.objective_score || 0) + Number(a.manual_score || 0);
-    const pending = Number(a.pending_points || 0);
-
+    const name = (s.last_name || '') + ' ' + (s.first_name || '');
+    const elapsedMin = a.started_at ? Math.max(0, Math.floor((now - new Date(a.started_at).getTime()) / 60000)) : 0;
+    const over = durationMin > 0 && elapsedMin > durationMin;
+    const remaining = durationMin > 0 ? Math.max(0, durationMin - elapsedMin) : null;
     return `
-      <article class="item" style="display:block;margin:12px 0;padding:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <div>
-            <h3 style="margin:0 0 6px">${escapeExcelText(studentName)}</h3>
-            <small style="color:#7183a2">رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-            <small style="color:#7183a2">${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}</small>
-          </div>
-          <div style="text-align:center;background:#eaf1ff;padding:10px 18px;border-radius:12px;min-width:100px">
-            <div style="font-size:12px;color:#7183a2;margin-bottom:4px">العلامة</div>
-            <div style="font-size:26px;font-weight:800;color:#155eef;line-height:1">
-              ${totalScore}${pending > 0 ? ' *' : ''}
-            </div>
-            ${pending > 0 ? `<div style="font-size:11px;color:#b42318;margin-top:4px">* بانتظار التصحيح</div>` : ''}
-          </div>
+      <div class="item" style="align-items:flex-start">
+        <div>
+          <strong>${escapeExcelText(name)}</strong><br>
+          <small>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
+          <small>بدأ في: ${a.started_at ? new Date(a.started_at).toLocaleString('ar') : '—'}</small>
         </div>
-
-        <div style="margin-top:14px">
-          <button type="button" class="secondary" onclick="reopenStudentExam('${examId}', '${a.student_id}')">إعادة فتح الامتحان لهذا الطالب</button>
+        <div style="text-align:left">
+          <span style="padding:4px 10px;border-radius:8px;font-weight:bold;background:${over ? '#fdecec' : '#eaf1ff'};color:${over ? '#b42318' : '#155eef'}">
+            ${over ? `تجاوز المدة (${elapsedMin} د)` : (remaining !== null ? `متبقٍ ${remaining} د — منقضٍ ${elapsedMin} د` : `منقضٍ ${elapsedMin} د`)}
+          </span>
         </div>
-
-        ${written.length ? `
-          <details style="margin-top:14px;background:#f4f7fc;padding:10px;border-radius:10px">
-            <summary style="cursor:pointer;font-weight:bold;color:#173b76">
-              الإجابات الكتابية (${written.length}) — اضغط للتصحيح
-            </summary>
-            <div style="margin-top:10px">
-              ${written.map(ans => {
-                const q = questionMap.get(ans.question_id);
-                return `
-                  <div style="background:white;padding:12px;margin:10px 0;border-radius:10px;border:1px solid #e3eaf5">
-                    <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
-                    <p style="color:#172b4d">${escapeExcelText(ans.written_answer || '')}</p>
-                    <div style="margin-top:10px">
-                      <label style="display:block;margin-bottom:6px;font-weight:bold;font-size:13px">
-                        العلامة الممنوحة (من ${Number(q?.points || 0)})
-                      </label>
-                      <div style="display:flex;gap:8px;align-items:center">
-                        <input type="number" class="manual-score-input" id="score-${ans.id}"
-                          min="0" max="${Number(q?.points || 0)}" step="0.25"
-                          value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
-                          placeholder="من ${Number(q?.points || 0)}"
-                          style="flex:1;padding:10px;margin:0">
-                        <button type="button" class="secondary" onclick="saveManualGrade('${ans.id}')">حفظ</button>
-                      </div>
-                      <small style="color:#7183a2">${ans.graded_at ? '✓ تم التصحيح' : '⏳ بانتظار التصحيح'}</small>
-                    </div>
-                  </div>`;
-              }).join('')}
-            </div>
-          </details>
-        ` : ''}
-      </article>`;
+      </div>`;
   }).join('');
+}
 
 function startLiveAutoRefresh() {
   if (liveTimer) clearInterval(liveTimer);
@@ -710,6 +704,7 @@ $('refresh-live').onclick = loadLiveAttempts;
 $('live-exam').addEventListener('change', loadLiveAttempts);
 $('live-group').addEventListener('change', loadLiveAttempts);
 
+/* ============ تصحيح الإجابات الكتابية ============ */
 window.reopenStudentExam = async function(examId, studentId) {
   if (!await teacher()) { alert('انتهت الجلسة أو لا تملك الصلاحية.'); return; }
   if (!confirm('هل تريد إنشاء محاولة امتحان جديدة لهذا الطالب؟ ستبقى المحاولات السابقة محفوظة.')) return;
@@ -727,8 +722,7 @@ async function saveManualGrade(answerId) {
   const input = $('score-' + answerId);
   const score = Number(input.value);
   if (input.value.trim() === '' || !Number.isFinite(score) || score < 0) {
-    alert('يرجى إدخال علامة صحيحة.');
-    return;
+    alert('يرجى إدخال علامة صحيحة.'); return;
   }
   const btn = input.parentElement.querySelector('button');
   btn.disabled = true;
@@ -779,7 +773,6 @@ async function loadResults(examId) {
     if (result.error) { box.textContent = 'تعذر تحميل الأسئلة: ' + result.error.message; return; }
     questions = result.data || [];
   }
-
   const questionMap = new Map(questions.map(q => [q.id, q]));
   const answersByAttempt = new Map();
   (answers || []).forEach(a => {
@@ -791,71 +784,42 @@ async function loadResults(examId) {
     const s = a.student_profiles;
     const studentName = (s.last_name || '') + ' ' + (s.first_name || '');
     const written = answersByAttempt.get(a.id) || [];
-    const totalScore = Number(a.objective_score || 0) + Number(a.manual_score || 0);
-    const pending = Number(a.pending_points || 0);
-
     return `
       <article class="item" style="display:block;margin:12px 0;padding:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <div>
-            <h3 style="margin:0 0 6px">${escapeExcelText(studentName)}</h3>
-            <small style="color:#7183a2">رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-            <small style="color:#7183a2">${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}</small>
-          </div>
-          <div style="text-align:center;background:#eaf1ff;padding:10px 18px;border-radius:12px;min-width:100px">
-            <div style="font-size:12px;color:#7183a2;margin-bottom:4px">العلامة</div>
-            <div style="font-size:26px;font-weight:800;color:#155eef;line-height:1">
-              ${totalScore}${pending > 0 ? ' *' : ''}
-            </div>
-            ${pending > 0 ? `<div style="font-size:11px;color:#b42318;margin-top:4px">* بانتظار التصحيح</div>` : ''}
-          </div>
-        </div>
-
-        <div style="margin-top:14px">
-          <button type="button" class="secondary" onclick="reopenStudentExam('${examId}', '${a.student_id}')">إعادة فتح الامتحان لهذا الطالب</button>
-        </div>
-
-        ${written.length ? `
-          <details style="margin-top:14px;background:#f4f7fc;padding:10px;border-radius:10px">
-            <summary style="cursor:pointer;font-weight:bold;color:#173b76">
-              الإجابات الكتابية (${written.length}) — اضغط للتصحيح
-            </summary>
-            <div style="margin-top:10px">
-              ${written.map(ans => {
-                const q = questionMap.get(ans.question_id);
-                return `
-                  <div style="background:white;padding:12px;margin:10px 0;border-radius:10px;border:1px solid #e3eaf5">
-                    <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
-                    <p style="color:#172b4d">${escapeExcelText(ans.written_answer || '')}</p>
-                    <div style="margin-top:10px">
-                      <label style="display:block;margin-bottom:6px;font-weight:bold;font-size:13px">
-                        العلامة الممنوحة (من ${Number(q?.points || 0)})
-                      </label>
-                      <div style="display:flex;gap:8px;align-items:center">
-                        <input type="number" class="manual-score-input" id="score-${ans.id}"
-                          min="0" max="${Number(q?.points || 0)}" step="0.25"
-                          value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
-                          placeholder="من ${Number(q?.points || 0)}"
-                          style="flex:1;padding:10px;margin:0">
-                        <button type="button" class="secondary" onclick="saveManualGrade('${ans.id}')">حفظ</button>
-                      </div>
-                      <small style="color:#7183a2">${ans.graded_at ? '✓ تم التصحيح' : '⏳ بانتظار التصحيح'}</small>
-                    </div>
-                  </div>`;
-              }).join('')}
-            </div>
-          </details>
-        ` : ''}
+        <h3>${escapeExcelText(studentName)}</h3>
+        <p>رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</p>
+        <p><strong>حالة المحاولة:</strong> ${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}</p>
+        <button type="button" class="secondary" onclick="reopenStudentExam('${examId}', '${a.student_id}')">إعادة فتح الامتحان لهذا الطالب</button>
+        <p>العلامة الآلية: ${Number(a.objective_score || 0)} — العلامة اليدوية: ${Number(a.manual_score || 0)} — نقاط تنتظر التصحيح: ${Number(a.pending_points || 0)}</p>
+        <h4>الإجابات الكتابية</h4>
+        ${written.length ? written.map(ans => {
+          const q = questionMap.get(ans.question_id);
+          return `
+            <div style="background:#f4f7fc;padding:12px;margin:10px 0;border-radius:10px">
+              <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
+              <p>${escapeExcelText(ans.written_answer || '')}</p>
+              <p>العلامة الحالية: ${Number(ans.manual_score || 0)} / ${Number(q?.points || 0)}</p>
+              <div style="margin-top:12px">
+                <label>العلامة الممنوحة:</label>
+                <input type="number" class="manual-score-input" id="score-${ans.id}"
+                  min="0" max="${Number(q?.points || 0)}" step="0.25"
+                  value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
+                  placeholder="من ${Number(q?.points || 0)}" style="width:100%;padding:10px">
+                <button type="button" class="secondary" onclick="saveManualGrade('${ans.id}')">حفظ التصحيح</button>
+                <small>${ans.graded_at ? 'تم التصحيح' : 'بانتظار التصحيح'}</small>
+              </div>
+            </div>`;
+        }).join('') : '<p>لا توجد إجابات كتابية.</p>'}
       </article>`;
   }).join('');
 }
 
+/* ============ تصدير Excel ============ */
 async function exportResultsExcel() {
   const examId = $('results-exam').value;
   if (!examId) { status('export-status', 'يرجى اختيار الامتحان أولاً.'); return; }
   if (typeof XLSX === 'undefined') { status('export-status', 'تعذر تحميل مكتبة Excel.'); return; }
-  const btn = $('export-results');
-  btn.disabled = true;
+  const btn = $('export-results'); btn.disabled = true;
   try {
     if (!await teacher()) { status('export-status', 'انتهت الجلسة أو لا تملك الصلاحية.'); return; }
     status('export-status', 'جارٍ تجهيز ملف النتائج...');
@@ -906,11 +870,10 @@ async function exportResultsExcel() {
       (incompleteCount ? ' — لم تُدرج ' + incompleteCount + ' محاولة غير مكتملة التصحيح.' : ''));
   } catch (err) {
     status('export-status', 'حدث خطأ أثناء التصدير: ' + (err.message || String(err)));
-  } finally {
-    btn.disabled = false;
-  }
+  } finally { btn.disabled = false; }
 }
 
+/* ============ إدارة الطلبة ============ */
 async function createStudent(e) {
   e.preventDefault();
   if (!await teacher()) { status('student-status', 'انتهت الجلسة أو لا تملك الصلاحية.'); return; }
@@ -923,8 +886,7 @@ async function createStudent(e) {
   if (!/^[0-9]{8}$/.test(registrationNumber)) { status('student-status', 'رقم التسجيل يجب أن يتكون من 8 أرقام.'); return; }
   if (!firstName || !lastName) { status('student-status', 'يرجى إدخال الاسم واللقب.'); return; }
   if (password.length < 8) { status('student-status', 'كلمة المرور يجب ألا تقل عن 8 أحرف.'); return; }
-  const btn = $('create-student');
-  btn.disabled = true;
+  const btn = $('create-student'); btn.disabled = true;
   status('student-status', 'جارٍ إنشاء الحساب...');
   try {
     const { data, error } = await db.functions.invoke('create-student', {
@@ -934,11 +896,8 @@ async function createStudent(e) {
     if (data?.error) { status('student-status', 'تعذر إنشاء الحساب: ' + data.error); return; }
     $('student-form').reset();
     status('student-status', 'تم إنشاء حساب الطالب: ' + lastName + ' ' + firstName + ' — رقم الدخول: ' + registrationNumber);
-  } catch (error) {
-    status('student-status', 'حدث خطأ: ' + error.message);
-  } finally {
-    btn.disabled = false;
-  }
+  } catch (error) { status('student-status', 'حدث خطأ: ' + error.message); }
+  finally { btn.disabled = false; }
 }
 
 async function resetStudentPassword(e) {
@@ -950,8 +909,7 @@ async function resetStudentPassword(e) {
   if (!/^[0-9]{8}$/.test(registration)) { status('reset-password-status', 'رقم التسجيل يجب أن يتكون من 8 أرقام.'); return; }
   if (password.length < 8) { status('reset-password-status', 'كلمة المرور يجب ألا تقل عن 8 أحرف.'); return; }
   if (password !== confirmation) { status('reset-password-status', 'كلمتا المرور غير متطابقتين.'); return; }
-  const btn = $('reset-password-button');
-  btn.disabled = true;
+  const btn = $('reset-password-button'); btn.disabled = true;
   status('reset-password-status', 'جارٍ تغيير كلمة المرور...');
   try {
     const { data, error } = await db.functions.invoke('bright-responder', {
@@ -961,11 +919,8 @@ async function resetStudentPassword(e) {
     if (data?.error) { status('reset-password-status', data.error); return; }
     $('reset-password-form').reset();
     status('reset-password-status', 'تم تغيير كلمة مرور الطالب بنجاح.');
-  } catch (err) {
-    status('reset-password-status', 'حدث خطأ: ' + err.message);
-  } finally {
-    btn.disabled = false;
-  }
+  } catch (err) { status('reset-password-status', 'حدث خطأ: ' + err.message); }
+  finally { btn.disabled = false; }
 }
 
 async function importStudentsExcel() {
@@ -987,11 +942,9 @@ async function importStudentsExcel() {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
     if (!rows.length) { status('excel-status', 'الملف فارغ أو لا يحتوي على بيانات.'); return; }
-
     function normalizeHeader(value) {
       return String(value || '').trim().replace(/\s+/g, '').replace(/[أإآ]/g, 'ا');
     }
-
     const headers = Object.keys(rows[0]);
     const columns = {};
     for (const h of headers) {
@@ -1001,17 +954,13 @@ async function importStudentsExcel() {
       if (key === 'رقمالتسجيل') columns.registration = h;
       if (key === 'كلمةالسر') columns.password = h;
     }
-
     if (!columns.firstName || !columns.lastName || !columns.registration || !columns.password) {
-      status('excel-status', 'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.');
-      return;
+      status('excel-status', 'أسماء الأعمدة غير صحيحة. يجب أن تكون: الاسم، اللقب، رقم التسجيل، كلمة السر.'); return;
     }
-
     const seen = new Set();
     const errors = [];
     let success = 0;
     status('excel-status', 'تمت قراءة ' + rows.length + ' صفاً. جارٍ إنشاء الحسابات...');
-
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const firstName = String(row[columns.firstName] ?? '').trim();
@@ -1019,13 +968,11 @@ async function importStudentsExcel() {
       const registrationNumber = String(row[columns.registration] ?? '').trim().replace(/\.0$/, '');
       const password = String(row[columns.password] ?? '').trim();
       const excelRow = i + 2;
-
       if (!firstName || !lastName) { errors.push('السطر ' + excelRow + ': الاسم أو اللقب فارغ.'); continue; }
       if (!/^[0-9]{8}$/.test(registrationNumber)) { errors.push('السطر ' + excelRow + ': رقم التسجيل يجب أن يتكون من 8 أرقام.'); continue; }
       if (password.length < 8) { errors.push('السطر ' + excelRow + ': كلمة السر أقل من 8 أحرف.'); continue; }
       if (seen.has(registrationNumber)) { errors.push('السطر ' + excelRow + ': رقم التسجيل مكرر داخل الملف.'); continue; }
       seen.add(registrationNumber);
-
       try {
         const { data, error } = await db.functions.invoke('create-student', {
           body: { first_name: firstName, last_name: lastName, group_number: groupNumber, registration_number: registrationNumber, password }
@@ -1038,7 +985,6 @@ async function importStudentsExcel() {
       }
       status('excel-status', 'تقدم الاستيراد: ' + (i + 1) + ' من ' + rows.length + ' — تم إنشاء ' + success + ' حساباً.');
     }
-
     let report = `<div class="status"><strong>انتهى الاستيراد</strong><br>عدد الصفوف: ${rows.length}<br>الحسابات المنشأة بنجاح: ${success}<br>الصفوف التي تعذر استيرادها: ${errors.length}</div>`;
     if (errors.length) {
       const errorItems = errors.map(e => '<li>' + escapeExcelText(e) + '</li>').join('');
@@ -1047,13 +993,11 @@ async function importStudentsExcel() {
     reportBox.innerHTML = report;
     status('excel-status', 'اكتمل الاستيراد. الحسابات المنشأة: ' + success + '، الأخطاء: ' + errors.length);
     if (success > 0) fileInput.value = '';
-  } catch (err) {
-    status('excel-status', 'تعذر قراءة الملف: ' + err.message);
-  } finally {
-    btn.disabled = false;
-  }
+  } catch (err) { status('excel-status', 'تعذر قراءة الملف: ' + err.message); }
+  finally { btn.disabled = false; }
 }
 
+/* ============ ربط الأحداث ============ */
 $('import-students').addEventListener('click', importStudentsExcel);
 $('student-form').addEventListener('submit', createStudent);
 $('reset-password-form').addEventListener('submit', resetStudentPassword);
@@ -1068,6 +1012,7 @@ $('add-written').onclick = () => addQuestion('written');
 $('exam-form').addEventListener('submit', saveExam);
 $('logout').onclick = async () => { await db.auth.signOut(); location.reload(); };
 
+/* ============ فحص الجلسة عند الفتح ============ */
 (async () => {
   const { data: { session } } = await db.auth.getSession();
   if (session && await teacher()) {
