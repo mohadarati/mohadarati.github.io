@@ -140,44 +140,7 @@ button{border:0;border-radius:9px;padding:10px 15px;background:#155eef;color:whi
     </form>
     <div id="reset-password-status" class="status hidden" role="status"></div>
   </div>
-<!-- ✅ قسم تعديل الفوج فقط -->
-<div class="panel">
-  <h2>تعديل فوج طالب</h2>
-  <p>أدخل رقم التسجيل الجامعي ثم اختر الفوج الجديد.</p>
 
-  <!-- خطوة 1: جلب الطالب -->
-  <form id="load-student-form">
-    <label>رقم التسجيل الجامعي
-      <input id="edit-student-number" type="text" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" placeholder="37185601" required>
-    </label>
-    <button type="submit">🔍 جلب البيانات</button>
-  </form>
-
-  <!-- خطوة 2: تعديل الفوج -->
-  <form id="edit-group-form" class="hidden">
-    <label>اسم الطالب
-      <input id="edit-student-name-display" type="text" readonly>
-    </label>
-    <label>الفوج الحالي
-      <input id="edit-student-current-group" type="text" readonly>
-    </label>
-<label>الفوج الجديد
-  <select id="edit-student-group" required>
-    <option value="">-- اختر الفوج --</option>
-    <option value="1">الفوج 1</option>
-    <option value="2">الفوج 2</option>
-    <option value="3">الفوج 3</option>
-    <option value="4">الفوج 4</option>
-    <option value="5">الفوج 5</option>
-    <option value="6">الفوج 6</option>
-  </select>
-</label>
-    <button id="edit-group-button" type="submit">💾 حفظ الفوج الجديد</button>
-    <button type="button" id="cancel-group-button">إلغاء</button>
-  </form>
-
-  <div id="edit-group-status" class="status hidden" role="status"></div>
-</div>
   <div class="panel">
     <h2>استيراد الطلبة من ملف Excel</h2>
     <p>اختر ملف Excel يحتوي على الأعمدة: الاسم، اللقب، رقم التسجيل، كلمة السر.</p>
@@ -674,12 +637,12 @@ async function loadLiveAttempts() {
   }
 
   const now = Date.now();
-  box.innerHTML = filtered.map(a => {
+    box.innerHTML = filtered.map(a => {
     const s = a.student_profiles;
     const studentName = (s.last_name || '') + ' ' + (s.first_name || '');
-    const startedMs = new Date(a.started_at).getTime();
-    const elapsedMin = Math.max(0, Math.round((now - startedMs) / 60000));
-    const remainingMin = durationMin > 0 ? Math.max(0, durationMin - elapsedMin) : null;
+    const written = answersByAttempt.get(a.id) || [];
+    const totalScore = Number(a.objective_score || 0) + Number(a.manual_score || 0);
+    const pending = Number(a.pending_points || 0);
 
     return `
       <article class="item" style="display:block;margin:12px 0;padding:16px">
@@ -687,21 +650,55 @@ async function loadLiveAttempts() {
           <div>
             <h3 style="margin:0 0 6px">${escapeExcelText(studentName)}</h3>
             <small style="color:#7183a2">رقم التسجيل: ${escapeExcelText(s.registration_number || '')} — الفوج: ${s.group_number || 'غير محدد'}</small><br>
-            <small style="color:#7183a2">بدأ في: ${new Date(a.started_at).toLocaleString('ar')} — مضى: ${elapsedMin} د</small>
+            <small style="color:#7183a2">${a.submitted_at ? 'تم تسليم الامتحان' : 'لم يتم تسليم الامتحان'}</small>
           </div>
-          <div style="text-align:center;background:#eaf1ff;padding:10px 18px;border-radius:12px;min-width:110px">
-            <div style="font-size:12px;color:#7183a2;margin-bottom:4px">الوقت المتبقي</div>
-            <div style="font-size:20px;font-weight:800;color:#155eef;line-height:1">
-              ${remainingMin !== null ? remainingMin + ' د' : '—'}
+          <div style="text-align:center;background:#eaf1ff;padding:10px 18px;border-radius:12px;min-width:100px">
+            <div style="font-size:12px;color:#7183a2;margin-bottom:4px">العلامة</div>
+            <div style="font-size:26px;font-weight:800;color:#155eef;line-height:1">
+              ${totalScore}${pending > 0 ? ' *' : ''}
             </div>
+            ${pending > 0 ? `<div style="font-size:11px;color:#b42318;margin-top:4px">* بانتظار التصحيح</div>` : ''}
           </div>
         </div>
+
         <div style="margin-top:14px">
           <button type="button" class="secondary" onclick="reopenStudentExam('${examId}', '${a.student_id}')">إعادة فتح الامتحان لهذا الطالب</button>
         </div>
+
+        ${written.length ? `
+          <details style="margin-top:14px;background:#f4f7fc;padding:10px;border-radius:10px">
+            <summary style="cursor:pointer;font-weight:bold;color:#173b76">
+              الإجابات الكتابية (${written.length}) — اضغط للتصحيح
+            </summary>
+            <div style="margin-top:10px">
+              ${written.map(ans => {
+                const q = questionMap.get(ans.question_id);
+                return `
+                  <div style="background:white;padding:12px;margin:10px 0;border-radius:10px;border:1px solid #e3eaf5">
+                    <strong>${escapeExcelText(q?.question_text || 'سؤال')}</strong>
+                    <p style="color:#172b4d">${escapeExcelText(ans.written_answer || '')}</p>
+                    <div style="margin-top:10px">
+                      <label style="display:block;margin-bottom:6px;font-weight:bold;font-size:13px">
+                        العلامة الممنوحة (من ${Number(q?.points || 0)})
+                      </label>
+                      <div style="display:flex;gap:8px;align-items:center">
+                        <input type="number" class="manual-score-input" id="score-${ans.id}"
+                          min="0" max="${Number(q?.points || 0)}" step="0.25"
+                          value="${ans.graded_at ? Number(ans.manual_score || 0) : ''}"
+                          placeholder="من ${Number(q?.points || 0)}"
+                          style="flex:1;padding:10px;margin:0">
+                        <button type="button" class="secondary" onclick="saveManualGrade('${ans.id}')">حفظ</button>
+                      </div>
+                      <small style="color:#7183a2">${ans.graded_at ? '✓ تم التصحيح' : '⏳ بانتظار التصحيح'}</small>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </details>
+        ` : ''}
       </article>`;
   }).join('');
-}
+
 function startLiveAutoRefresh() {
   if (liveTimer) clearInterval(liveTimer);
   liveTimer = setInterval(() => {
@@ -1080,105 +1077,6 @@ $('logout').onclick = async () => { await db.auth.signOut(); location.reload(); 
     startLiveAutoRefresh();
   }
 })();
-// ===== إنشاء عميل Supabase =====
-// ⚠️ استبدل الرابط والمفتاح بمعلومات مشروعك من: Supabase Dashboard → Settings → API
-const SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ===== تعديل الفوج فقط =====
-
-const groupLoadForm = document.getElementById('load-student-form');
-const groupEditForm = document.getElementById('edit-group-form');
-
-let groupCurrentUserId = null; // user_id وليس id
-
-function showGroupStatus(msg, type = 'success') {
-  const el = document.getElementById('edit-group-status');
-  el.textContent = msg;
-  el.className = `status ${type}`;
-  el.classList.remove('hidden');
-}
-
-function hideGroupStatus() {
-  document.getElementById('edit-group-status').classList.add('hidden');
-});
-
-// ===== 1. جلب بيانات الطالب =====
-groupLoadForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  hideGroupStatus();
-
-  const number = document.getElementById('edit-student-number').value.trim();
-  if (!/^\d{8}$/.test(number)) {
-    showGroupStatus('رقم التسجيل يجب أن يكون 8 أرقام', 'error');
-    return;
-  }
-
-  try {
-    // ✅ supabaseClient بدل supabase
-    const { data: student, error } = await supabaseClient
-      .from('student_profiles')
-      .select('user_id, registration_number, first_name, last_name, group_number')
-      .eq('registration_number', number)
-      .single();
-
-    if (error || !student) {
-      throw new Error('لم يتم العثور على الطالب');
-    }
-
-    groupCurrentUserId = student.user_id;
-
-    // ✅ عرض الاسم الكامل (first_name + last_name)
-    const fullName = `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'غير محدد';
-    document.getElementById('edit-student-name-display').value  = fullName;
-    document.getElementById('edit-student-current-group').value = student.group_number ?? 'غير محدد';
-    document.getElementById('edit-student-group').value         = student.group_number ?? '';
-
-    groupEditForm.classList.remove('hidden');
-    showGroupStatus('✅ تم جلب البيانات، اختر الفوج الجديد');
-  } catch (err) {
-    console.error('خطأ Supabase:', err);
-    showGroupStatus('❌ ' + err.message, 'error');
-    groupEditForm.classList.add('hidden');
-  }
-});
-
-// ===== 2. حفظ الفوج الجديد =====
-groupEditForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!groupCurrentUserId) return;
-
-  const newGroup = parseInt(document.getElementById('edit-student-group').value, 10);
-  if (!newGroup || newGroup < 1 || newGroup > 6) {
-    showGroupStatus('الفوج يجب أن يكون بين 1 و 6', 'error');
-    return;
-  }
-
-  try {
-    // ✅ supabaseClient بدل supabase
-    const { error } = await supabaseClient
-      .from('student_profiles')
-      .update({ group_number: newGroup })
-      .eq('user_id', groupCurrentUserId);
-
-    if (error) throw error;
-
-    showGroupStatus(`✅ تم تغيير الفوج إلى: ${newGroup}`);
-  } catch (err) {
-    console.error('خطأ التحديث:', err);
-    showGroupStatus('❌ ' + err.message, 'error');
-  }
-});
-
-// ===== 3. إلغاء =====
-document.getElementById('cancel-group-button').addEventListener('click', () => {
-  groupEditForm.classList.add('hidden');
-  groupLoadForm.reset();
-  groupCurrentUserId = null;
-  hideGroupStatus();
-});
 </script>
 </body>
 </html>
